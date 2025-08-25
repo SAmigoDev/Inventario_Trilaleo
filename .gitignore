@@ -1,0 +1,35 @@
+# Django
+*.pyc
+__pycache__/
+.env
+.env.local
+.env.production
+*.pyo
+*.pyd
+.python
+pip-log.txt
+
+# Next.js
+.next/
+node_modules/
+out/
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
