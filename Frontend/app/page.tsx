@@ -1783,3 +1783,9 @@ export default function BusinessSalesSystem() {
     </div>
   )
 }
+/*Este código implementa un sistema web de inventarios y ventas en React que permite gestionar productos, proveedores, ventas y movimientos de inventario, mostrando un dashboard con métricas, gráficos y alertas de stock 
+crítico. Incluye funciones para agregar, editar, eliminar y buscar productos y proveedores, manejar un carrito de compras que descuenta stock al completar ventas, registrar automáticamente los movimientos de inventario, 
+y exportar reportes a Excel (productos, ventas e inventario) con totales y márgenes de ganancia; además, ofrece opciones de reset y recuperación de datos en ventas e inventario.*/
+
+
+
