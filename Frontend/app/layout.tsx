@@ -18,3 +18,8 @@ export default function RootLayout({
     </html>
   )
 }
+
+/*
+Layout principal de la app en Next.js con estilos globales y metadatos.
+Edited by Diego Jorquera Luna.
+*/
