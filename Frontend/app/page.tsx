@@ -612,7 +612,7 @@ export default function BusinessSalesSystem() {
     setProducts(products.filter((p) => p.id !== productId))
   }
 
-  // Funciones de exportación Excel mejoradas
+  // Funciones de exportación Excel
   const exportInventoryToExcel = () => {
     const data = inventoryMovements.map((movement) => {
       const ganancia = movement.type === "salida" ? (movement.unitPrice - movement.unitCost) * movement.quantity : 0
@@ -963,7 +963,7 @@ export default function BusinessSalesSystem() {
             </div>
           </div>
         )
-
+// Sección Productos
       case "products":
         return (
           <div className="space-y-6">
