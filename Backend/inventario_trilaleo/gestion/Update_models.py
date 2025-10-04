@@ -115,3 +115,6 @@ class Proveedor(models.Model):
     
     def __str__(self):
         return self.empresa
+        
+#diego jorquera
+#funcion: update script
