@@ -1756,7 +1756,11 @@ const completeSale = async () => {
 
 //---------------------------------------------------------------------------- FUNCIONES DE EXPORTACIÓN EXCEL MEJORADAS ---------------------------------------------------------------------------------------
 
+<<<<<<< HEAD
 // EXPORTACION DE INVENTARIO A EXCEL
+=======
+  // Funciones de exportación Excel
+>>>>>>> 285683847685a869924337743034526f58466762
   const exportInventoryToExcel = () => {
     // 1. Datos principales (tipados correctamente)
     const mainData = inventoryMovements.map((movement) => {
@@ -2188,8 +2192,12 @@ const completeSale = async () => {
             </div>
           </div>
         )
+<<<<<<< HEAD
 
 {/*----------------------------------------------------- INVENTARIO DE PRODUCTOS ----------------------------------------------------------------------------------*/}
+=======
+// Sección Productos
+>>>>>>> 285683847685a869924337743034526f58466762
       case "products":
         return (
           <div className="space-y-6">
@@ -3937,3 +3945,9 @@ const completeSale = async () => {
     </div>
   )
 }
+/*Este código implementa un sistema web de inventarios y ventas en React que permite gestionar productos, proveedores, ventas y movimientos de inventario, mostrando un dashboard con métricas, gráficos y alertas de stock 
+crítico. Incluye funciones para agregar, editar, eliminar y buscar productos y proveedores, manejar un carrito de compras que descuenta stock al completar ventas, registrar automáticamente los movimientos de inventario, 
+y exportar reportes a Excel (productos, ventas e inventario) con totales y márgenes de ganancia; además, ofrece opciones de reset y recuperación de datos en ventas e inventario.*/
+
+
+
