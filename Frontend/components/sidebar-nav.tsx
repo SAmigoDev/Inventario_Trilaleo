@@ -27,7 +27,7 @@ export function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) {
           <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center">
             <Package className="h-5 w-5" />
           </div>
-          <span className="font-bold text-lg">SIS-INVENTARIOS</span>
+          <span className="font-bold text-lg">Inventario Trilaleo</span>
         </div>
 
         <nav className="space-y-2">
@@ -58,12 +58,12 @@ export function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) {
         </div>
       </div>
 
-      <div className="absolute bottom-4 left-4 right-4">
+      {/* <div className="absolute bottom-4 left-4 right-4">
         <div className="text-xs text-gray-400 text-center">
           <p>SIS-INVENTARIOS Tarea Completo</p>
           <p>Versión 1.0</p>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }
