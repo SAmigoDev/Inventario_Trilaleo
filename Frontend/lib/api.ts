@@ -2,11 +2,16 @@ const API_BASE = 'http://localhost:8000/api';
 
 export const api = {
   // GET - usar español para coincidir con Django
-  getProducts: () => fetch(`${API_BASE}/productos/`).then(res => res.json()),
+  
   getCategories: () => fetch(`${API_BASE}/categorias/`).then(res => res.json()),
   getPresentaciones: () => fetch(`${API_BASE}/presentaciones_producto/`).then(res => res.json()),
-  
-  // POST
+
+//================================================================================ MODULO PRODUCTOS ================================================================================
+
+// GET
+  getProducts: () => fetch(`${API_BASE}/productos/`).then(res => res.json()),
+
+// POST
   createProducto: (data: any) => fetch(`${API_BASE}/productos/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -20,12 +25,12 @@ export const api = {
     return res.json();
   }),
   
-  // PUT
+// PUT
   updateProduct: (id: number, data: any) => {
     const url = `${API_BASE}/productos/${id}/`;
-    console.log('🎯 URL completa:', url);
-    console.log('📝 Datos enviados:', JSON.stringify(data, null, 2));
-    console.log('🔧 Método: PUT');
+    // console.log('🎯 URL completa:', url);
+    // console.log('📝 Datos enviados:', JSON.stringify(data, null, 2));
+    // console.log('🔧 Método: PUT');
     
     return fetch(url, {
       method: 'PUT',
@@ -33,42 +38,42 @@ export const api = {
       body: JSON.stringify(data)
     })
     .then(async (res) => {
-      console.log('📡 Response status:', res.status);
-      console.log('📡 Response URL:', res.url);
+      // console.log('📡 Response status:', res.status);
+      // console.log('📡 Response URL:', res.url);
       
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('❌ Error response:', errorText);
-        console.error('❌ Status:', res.status);
+        // console.error('❌ Error response:', errorText);
+        // console.error('❌ Status:', res.status);
         throw new Error(`HTTP ${res.status}: ${errorText}`);
       }
       return res.json();
     })
     .then(data => {
-      console.log('✅ Success response:', data);
+      // console.log('✅ Success response:', data);
       return data;
     })
     .catch(error => {
-      console.error('💥 Fetch error:', error);
+      // console.error('💥 Fetch error:', error);
       throw error;
     });
   },
   
-  // DELETE
+// DELETE
   deleteProducto: (id: number) => {
     // VERIFICAR ID ANTES DE HACER LA PETICIÓN
     if (!id || isNaN(id)) {
-      console.error('❌ ID inválido para DELETE:', id);
+      // console.error('❌ ID inválido para DELETE:', id);
       return Promise.reject(new Error('ID de producto inválido'));
     }
 
     const url = `${API_BASE}/productos/${id}/`;
-    console.log('🗑️ DELETE URL:', url);
+    // console.log('🗑️ DELETE URL:', url);
     
     return fetch(url, {
       method: 'DELETE'
     }).then(async (res) => {
-      console.log('🗑️ DELETE Response status:', res.status);
+      // console.log('🗑️ DELETE Response status:', res.status);
       
       if (!res.ok) {
         // Para errores 404, no intentar parsear JSON
@@ -85,12 +90,13 @@ export const api = {
         }
       }
       
-      // DELETE exitoso - no parsear JSON para respuestas vacías
+      // DELETE exitoso
       return { success: true, message: 'Producto eliminado correctamente' };
     });
   },
 
-//------------------------------------------------------------------------------------ PROVEEDORES ---------------------------------------------------------------------------------------------------------------
+//================================================================================ MODULO PROVEEDORES ================================================================================
+
   getProveedores: () => fetch(`${API_BASE}/proveedores/`).then(res => res.json()),
   getProveedor: (id: number) => fetch(`${API_BASE}/proveedores/${id}/`).then(res => res.json()),
   createProveedor: (data: any) => fetch(`${API_BASE}/proveedores/`, {
@@ -108,7 +114,8 @@ export const api = {
   }).then(res => res.json()),
   searchProveedores: (query: string) => fetch(`${API_BASE}/proveedores/buscar/?q=${query}`).then(res => res.json()),
 
-//-------------------------------------------------------------------------------------- VENTAS ------------------------------------------------------------------------------------------------------------------
+//================================================================================ MODULO VENTAS ================================================================================
+
   getVentas: () => fetch(`${API_BASE}/ventas/`).then(res => res.json()),
   getVenta: (id: number) => fetch(`${API_BASE}/ventas/${id}/`).then(res => res.json()),
 
@@ -167,7 +174,7 @@ export const api = {
       });
   },
 
-//------------------------------------------------------------------------------------ CLIENTES ----------------------------------------------------------------------------------------------------------------
+//================================================================================ CLIENTES ================================================================================
   getClientes: () => fetch(`${API_BASE}/clientes/`).then(res => res.json()),
   getCliente: (id: number) => fetch(`${API_BASE}/clientes/${id}/`).then(res => res.json()),
   createCliente: (data: any) => fetch(`${API_BASE}/clientes/`, {
@@ -176,7 +183,39 @@ export const api = {
     body: JSON.stringify(data)
   }).then(res => res.json()),
 
-//------------------------------------------------------------------------------------ PROMOCIONES ---------------------------------------------------------------------------------------------------------------
+//================================================================================ PROMOCIONES ================================================================================
   getPromociones: () => fetch(`${API_BASE}/promociones/`).then(res => res.json()),
   getPromocion: (id: number) => fetch(`${API_BASE}/promociones/${id}/`).then(res => res.json()),
+
+//================================================================================ MOVIMIENTOS DE INVENTARIO ================================================================================
+  getMovimientosInventario: async (): Promise<any[]> => {
+    const response = await fetch(`${API_BASE}/api/movimientos-inventario/`);
+    if (!response.ok) throw new Error('Error fetching movimientos inventario');
+    return response.json();
+  },
+
+  getMovimientosByProducto: async (productoId: number): Promise<any[]> => {
+    const response = await fetch(`${API_BASE}/api/movimientos-inventario/?producto_id=${productoId}`);
+    if (!response.ok) throw new Error('Error fetching movimientos por producto');
+    return response.json();
+  },
+
+  createMovimientoInventario: async (movimientoData: any): Promise<any> => {
+    const response = await fetch(`${API_BASE}/api/movimientos-inventario/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(movimientoData),
+    });
+    if (!response.ok) throw new Error('Error creating movimiento inventario');
+    return response.json();
+  },
+
+  deleteMovimientoInventario: async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE}/api/movimientos-inventario/${id}/`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Error deleting movimiento inventario');
+  },
 };

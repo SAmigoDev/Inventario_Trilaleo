@@ -1,7 +1,14 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+router.register(r'movimientos-inventario', views.MovimientoInventarioViewSet, basename='movimientos-inventario')
+
 urlpatterns = [
+    # RUTAS DEL ROUTER
+    path('api/', include(router.urls)),
+
     # CATEGORIAS
     path('categorias/', views.lista_categorias, name='lista_categorias'),
     
@@ -21,7 +28,7 @@ urlpatterns = [
     # VENTAS
     path('ventas/', views.lista_ventas, name='lista_ventas'),
 
-    # DETALLES DE VENTA - AGREGAR ESTAS RUTAS
+    # DETALLES DE VENTA
     path('detalle-venta/', views.lista_detalle_ventas, name='lista_detalle_ventas'),
     path('detalle-venta/<int:pk>/', views.detalle_venta, name='detalle_venta'),
 

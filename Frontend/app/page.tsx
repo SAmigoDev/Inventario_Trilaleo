@@ -82,6 +82,7 @@ interface Product {
   expiryDate?: string
   warrantyMonths?: number
   lastSoldDate?: string
+  observations?: string
 }
 
 // INTERFAZ DE PROVEEDORES
@@ -117,6 +118,7 @@ interface Sale {
   isWholesale: boolean
   status: "completed" | "cancelled"
   paymentMethod?: "cash" | "transfer" | "card"
+  isInternalPurchase?: boolean
 }
 
 // INTERFAZ DEL PRODUCTO VENDIDO
@@ -131,19 +133,24 @@ interface SaleItem {
 
 // INTERFAZ MOVIMIENTOS DE INVENTARIO
 interface InventoryMovement {
-  id: number
-  productId: number
-  productName: string
-  type: "entrada" | "salida" | "ajuste"
-  quantity: number
-  previousStock: number
-  newStock: number
-  unitCost: number
-  unitPrice: number
-  totalCost: number
-  totalValue: number
-  reason: string
-  date: string
+  id: number                    
+  productId: number             
+  productName: string        
+  type: "entrada" | "salida" | "ajuste" | "devolucion"  
+  quantity: number             
+  previousStock: number          
+  newStock: number           
+  unitCost: number            
+  unitPrice: number          
+  totalCost: number            
+  totalValue: number          
+  reason: string              
+  date: string                
+  id_venta?: number
+  venta_numero?: string
+  id_proveedor?: number
+  proveedor_nombre?: string
+  usuario?: string
 }
 
 // INTERFAZ PARA LOS DATOS DE LA API
@@ -236,12 +243,7 @@ interface DetalleVentaFromAPI {
     onSave: (product: Product) => void; 
     onCancel: () => void;
     categories: any[];
-  }> = ({
-    product,
-    onSave,
-    onCancel,
-    categories
-  }) => {
+  }> = ({ product, onSave, onCancel, categories }) => {
     const [editedProduct, setEditedProduct] = useState(product)
 
     const handleSave = () => {
@@ -249,7 +251,7 @@ interface DetalleVentaFromAPI {
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
         <div>
           <Label htmlFor="edit-product-name">Nombre</Label>
           <Input
@@ -260,7 +262,7 @@ interface DetalleVentaFromAPI {
           />
         </div>
         
-        {/* QUITAMOS EL CAMPO SKU EDITABLE */}
+        {/* SKU no editable (como lo tienes) */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="edit-product-sku">SKU</Label>
@@ -282,14 +284,25 @@ interface DetalleVentaFromAPI {
           </div>
         </div>
         
+        {/* PRECIOS MEJORADOS */}
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="edit-product-price">Precio</Label>
+            <Label htmlFor="edit-product-price">Precio Minorista</Label>
             <Input
               id="edit-product-price"
               type="number"
               value={editedProduct.price}
               onChange={(e) => setEditedProduct({ ...editedProduct, price: Number(e.target.value) })}
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <Label htmlFor="edit-product-wholesale">Precio Mayorista</Label>
+            <Input
+              id="edit-product-wholesale"
+              type="number"
+              value={editedProduct.wholesalePrice}
+              onChange={(e) => setEditedProduct({ ...editedProduct, wholesalePrice: Number(e.target.value) })}
               placeholder="0"
             />
           </div>
@@ -303,6 +316,9 @@ interface DetalleVentaFromAPI {
               placeholder="0"
             />
           </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="edit-product-stock">Stock</Label>
             <Input
@@ -313,9 +329,6 @@ interface DetalleVentaFromAPI {
               placeholder="0"
             />
           </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="edit-product-minstock">Stock Mínimo</Label>
             <Input
@@ -327,6 +340,9 @@ interface DetalleVentaFromAPI {
               min="1"
             />
           </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="edit-product-category">Categoría</Label>
             <Select
@@ -345,6 +361,28 @@ interface DetalleVentaFromAPI {
               </SelectContent>
             </Select>
           </div>
+          {/* NUEVO: Fecha de vencimiento */}
+          <div>
+            <Label htmlFor="edit-product-expiry">Fecha de Vencimiento (opcional)</Label>
+            <Input
+              id="edit-product-expiry"
+              type="date"
+              value={editedProduct.expiryDate || ""}
+              onChange={(e) => setEditedProduct({ ...editedProduct, expiryDate: e.target.value })}
+            />
+          </div>
+        </div>
+        
+        {/* NUEVO: Garantía */}
+        <div>
+          <Label htmlFor="edit-product-warranty">Garantía (meses)</Label>
+          <Input
+            id="edit-product-warranty"
+            type="number"
+            value={editedProduct.warrantyMonths || ""}
+            onChange={(e) => setEditedProduct({ ...editedProduct, warrantyMonths: Number(e.target.value) || undefined })}
+            placeholder="0"
+          />
         </div>
         
         <div>
@@ -357,7 +395,17 @@ interface DetalleVentaFromAPI {
           />
         </div>
         
-        <div className="flex justify-end gap-2">
+        <div>
+          <Label htmlFor="edit-product-observations">Observaciones</Label>
+          <Textarea
+            id="edit-product-observations"
+            value={editedProduct.observations || ""}
+            onChange={(e) => setEditedProduct({ ...editedProduct, observations: e.target.value })}
+            placeholder="Notas adicionales sobre el producto"
+          />
+        </div>
+        
+        <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="ghost" onClick={onCancel}>
             Cancelar
           </Button>
@@ -371,6 +419,139 @@ interface DetalleVentaFromAPI {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+  // FORMULARIO DE EDICION DE PROVEEDORES
+  const EditSupplierForm: React.FC<{
+    supplier: Supplier
+    onSave: (supplier: Supplier) => void
+    onCancel: () => void
+  }> = ({ supplier, onSave, onCancel }) => {
+    const [editedSupplier, setEditedSupplier] = useState(supplier)
+
+    const handleSave = () => {
+      onSave(editedSupplier)
+    }
+
+    return (
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="edit-supplier-name">Nombre de la Empresa</Label>
+          <Input
+            id="edit-supplier-name"
+            value={editedSupplier.empresa}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, empresa: e.target.value })}
+            placeholder="Nombre de la empresa"
+          />
+        </div>
+        <div>
+          <Label htmlFor="edit-supplier-contact">Persona de Contacto</Label>
+          <Input
+            id="edit-supplier-contact"
+            value={editedSupplier.contacto}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, contacto: e.target.value })}
+            placeholder="Nombre del contacto"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="edit-supplier-email">Email</Label>
+            <Input
+              id="edit-supplier-email"
+              type="email"
+              value={editedSupplier.email}
+              onChange={(e) => setEditedSupplier({ ...editedSupplier, email: e.target.value })}
+              placeholder="email@empresa.com"
+            />
+          </div>
+          <div>
+            <Label htmlFor="edit-supplier-phone">Teléfono</Label>
+            <Input
+              id="edit-supplier-phone"
+              value={editedSupplier.telefono}
+              onChange={(e) => setEditedSupplier({ ...editedSupplier, telefono: e.target.value })}
+              placeholder="555-1234"
+            />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="edit-supplier-address">Dirección</Label>
+          <Input
+            id="edit-supplier-address"
+            value={editedSupplier.direccion}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, direccion: e.target.value })}
+            placeholder="Dirección completa"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <Label htmlFor="edit-supplier-city">Ciudad</Label>
+            <Input
+              id="edit-supplier-city"
+              value={editedSupplier.ciudad || ""}
+              onChange={(e) => setEditedSupplier({ ...editedSupplier, ciudad: e.target.value })}
+              placeholder="Ciudad"
+            />
+          </div>
+          <div>
+            <Label htmlFor="edit-supplier-rfc">RFC</Label>
+            <Input
+              id="edit-supplier-rfc"
+              value={editedSupplier.rfc || ""}
+              onChange={(e) => setEditedSupplier({ ...editedSupplier, rfc: e.target.value })}
+              placeholder="RFC"
+            />
+          </div>
+          <div>
+            <Label htmlFor="edit-supplier-delivery">Tiempo de Entrega</Label>
+            <Input
+              id="edit-supplier-delivery"
+              value={editedSupplier.tiempo_entrega || ""}
+              onChange={(e) => setEditedSupplier({ ...editedSupplier, tiempo_entrega: e.target.value })}
+              placeholder="24-48 horas"
+            />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="edit-supplier-payment">Condiciones de Pago</Label>
+          <Input
+            id="edit-supplier-payment"
+            value={editedSupplier.condiciones_pago || ""}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, condiciones_pago: e.target.value })}
+            placeholder="30 días crédito, Contado, etc."
+          />
+        </div>
+        <div>
+          <Label htmlFor="edit-supplier-products">Productos que Suministra</Label>
+          <Textarea
+            id="edit-supplier-products"
+            value={editedSupplier.productos_que_surte}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, productos_que_surte: e.target.value })}
+            placeholder="Laptops, Teclados, Monitores (separados por comas)"
+          />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="edit-supplier-active"
+            checked={editedSupplier.activo !== false}
+            onCheckedChange={(checked) => setEditedSupplier({ ...editedSupplier, activo: checked })}
+          />
+          <Label htmlFor="edit-supplier-active" className="cursor-pointer">
+            Proveedor Activo
+          </Label>
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button type="button" onClick={handleSave}>
+            Guardar Cambios
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+//================================================================================ FUNCIONES BUSINESSSALESSYSTEM ================================================================================
+
 export default function BusinessSalesSystem() {
   // Estados
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -379,9 +560,11 @@ export default function BusinessSalesSystem() {
   const [currentDiscount, setCurrentDiscount] = useState(0)
   const [currentTotal, setCurrentTotal] = useState(0)
   const [currentBreakdown, setCurrentBreakdown] = useState<DiscountBreakdown[]>([])
-  const [movementCounter, setMovementCounter] = useState(0)
+  // const [movementCounter, setMovementCounter] = useState(0)
+  const [isWholesaleSale, setIsWholesaleSale] = useState(false)
+  const [isInternalPurchase, setIsInternalPurchase] = useState(false)
   
-// ------------------------------------------------------ FUNCION ADICION DE DATOS AL BACKEND ---------------------------------------------------------------
+//================================================================================ FUNCION ADICION DE DATOS AL BACKEND ================================================================================
   // Función para adaptar datos del frontend al backend
   const adaptProductToAPI = (product: any) => {
     return {
@@ -396,7 +579,7 @@ export default function BusinessSalesSystem() {
     };
   };
 
-//---------------------------------------------------------------------------------------- FUNCIONES DE PROVEEDORES --------------------------------------------------------------------------------------------------
+//================================================================================ FUNCIONES DE PROVEEDORES ================================================================================
 
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<any[]>([]);
@@ -423,7 +606,74 @@ export default function BusinessSalesSystem() {
     loadCategories();
   }, []);
 
-//----------------------------------------------------------------------------------------- CARGA DE DATOS DESDE LA API ------------------------------------------------------------------------------------------------
+//================================================================================ FUNCIONES DE EDITAR PROVEEDORES ================================================================================
+
+  // Función para editar proveedor
+  const updateSupplier = async (updatedSupplier: Supplier) => {
+    try {
+      console.log('🔄 Actualizando proveedor:', updatedSupplier);
+      
+      // Actualizar en la BD
+      const supplierActualizado = await api.updateProveedor(updatedSupplier.id_proveedor, updatedSupplier);
+      console.log('✅ Proveedor actualizado en BD:', supplierActualizado);
+
+      // Actualizar estado local
+      setSuppliers(suppliers.map((s) => 
+        s.id_proveedor === updatedSupplier.id_proveedor ? supplierActualizado : s
+      ));
+
+      // Cerrar diálogo
+      setIsEditSupplierDialogOpen(false);
+      setEditingSupplier(null);
+
+      console.log('✅ Proveedor actualizado exitosamente');
+      
+    } catch (error: any) {
+      console.error('❌ Error actualizando proveedor:', error);
+      alert('Error al actualizar el proveedor: ' + error.message);
+    }
+  }
+
+//================================================================================ FUNCION PARA AGREGAR MOVIMIENTO DE ENTRADA POR COMPRA A VENDEDOR ================================================================================
+
+  const addSupplierInventoryMovement = async (
+    productId: number,
+    quantity: number,
+    supplierId: number,
+    reason: string = "Compra a proveedor"
+  ) => {
+    const product = products.find((p) => p.id === productId);
+    if (!product) return;
+
+    const previousStock = product.stock;
+    const newStock = previousStock + quantity;
+
+    try {
+      // Actualizar stock
+      await updateStockInDatabase(productId, newStock);
+      
+      // Agregar movimiento
+      await addInventoryMovement(
+        productId,
+        product.name,
+        "entrada",
+        quantity,
+        previousStock,
+        newStock,
+        reason,
+        undefined, // No es una venta
+        supplierId // ID del proveedor
+      );
+
+      console.log(`✅ Entrada de inventario registrada: ${quantity} unidades de ${product.name}`);
+      
+    } catch (error) {
+      console.error('❌ Error registrando entrada de inventario:', error);
+      alert('Error al registrar la entrada de inventario');
+    }
+  };
+
+//================================================================================ CARGA DE DATOS DESDE LA API ================================================================================
   // 2. MODIFICAR LA ADAPTACIÓN DE PRODUCTOS DESDE LA API
   useEffect(() => {
     const loadProducts = async () => {
@@ -517,7 +767,7 @@ export default function BusinessSalesSystem() {
       loadSuppliers();
   }, []);
 
-// ----------------------------------------------------------- FUNCION EXPORTAR PROVEEDORES ---------------------------------------------------------------------------
+//================================================================================ FUNCION EXPORTAR PROVEEDORES ================================================================================
 
   const exportSuppliersToExcel = () => {
     const data = suppliers.map((supplier) => ({
@@ -537,7 +787,7 @@ export default function BusinessSalesSystem() {
     exportToExcel(data, "proveedores", "Lista de Proveedores")
   }
 
-// ----------------------------------------------------------- Detalle Ventas ---------------------------------------------------------------------------
+//================================================================================ Detalle Ventas ================================================================================
 
   const [sales, setSales] = useState<Sale[]>([])
 
@@ -661,135 +911,318 @@ export default function BusinessSalesSystem() {
     }
   }
 
-//--------------------------------------------------------- ----------------------------------------------------------------------------------
+//================================================================================ FUNCION DE MOVIMIENTOS DE INVENTARIO ================================================================================
 
-const completeSale = async () => {
-  if (cart.length === 0) return
+  useEffect(() => {
+    loadInventoryMovementsFromDB();
+  }, []);
 
-  try {
-    // console.log('🛒 Iniciando venta con carrito:', cart);
-
-    // Preparacion de datos para la BD
-    const saleData = {
-      numero_venta: `V-${Date.now().toString().slice(-6)}`,
-      id_cliente: selectedCustomer?.id || null,
-      id_promocion: currentPromotion?.id || null,
-      subtotal: Number(currentSubtotal),
-      descuento: Number(currentDiscount),
-      total: Number(currentTotal) || 0.01,
-      fecha: new Date().toISOString().split('T')[0],
-      metodo_pago: mapPaymentMethodToDB(paymentMethod),
-      es_mayorista: selectedCustomer?.isWholesale || false,
-      estado: 'completada'
-    }
-
-    // console.log('📤 Enviando venta a BD:', saleData)
-    
-    // Guardado de venta en BD
-    const ventaCreada = await api.createVenta(saleData)
-    // console.log('✅ Venta creada en BD:', ventaCreada)
-
-    // OBTENER PRESENTACIONES DE LA BD
-    let presentaciones = [];
+  const addInventoryMovementToDB = async (movementData: {
+    id_producto: number
+    tipo: "entrada" | "salida" | "ajuste" | "devolucion"
+    cantidad: number
+    stock_anterior: number
+    stock_nuevo: number
+    costo_unitario: number
+    precio_unitario: number
+    valor_total: number
+    motivo: string
+    id_venta?: number
+    id_proveedor?: number
+    usuario?: string
+  }) => {
     try {
-      presentaciones = await api.getPresentaciones();
-      // console.log('🔍 Presentaciones obtenidas:', presentaciones.length);
+      const movimiento = await api.createMovimientoInventario(movementData);
+      console.log('✅ Movimiento guardado en BD:', movimiento);
+      return movimiento;
     } catch (error) {
-      // console.warn('⚠️ Error cargando presentaciones:', error);
+      console.error('❌ Error guardando movimiento en BD:', error);
+      throw error;
+    }
+  };
+
+  // Función para cargar movimientos desde la BD
+  const loadInventoryMovementsFromDB = async () => {
+    try {
+      const movimientosData = await api.getMovimientosInventario();
+      const adaptedMovements: InventoryMovement[] = movimientosData.map((mov: any) => ({
+        id: mov.id_movimiento,
+        productId: mov.id_producto,
+        productName: mov.producto_nombre,
+        type: mov.tipo,
+        quantity: mov.cantidad,
+        previousStock: mov.stock_anterior,
+        newStock: mov.stock_nuevo,
+        unitCost: Number(mov.costo_unitario) || 0,
+        unitPrice: Number(mov.precio_unitario) || 0,
+        totalCost: Number(mov.costo_unitario) * mov.cantidad || 0,
+        totalValue: Number(mov.valor_total) || 0,
+        reason: mov.motivo,
+        date: mov.fecha_movimiento,
+        id_venta: mov.id_venta || undefined,
+        venta_numero: mov.venta_numero || undefined,
+        id_proveedor: mov.id_proveedor || undefined,
+        proveedor_nombre: mov.proveedor_nombre || undefined,
+        usuario: mov.usuario || 'Sistema',
+      }));
+      setInventoryMovements(adaptedMovements);
+    } catch (error) {
+      console.error('Error cargando movimientos:', error);
+    }
+  };
+
+  // Reemplaza la función addInventoryMovement existente:
+  const addInventoryMovement = async (
+    productId: number,
+    productName: string,
+    type: "entrada" | "salida" | "ajuste" | "devolucion",
+    quantity: number,
+    previousStock: number,
+    newStock: number,
+    reason: string,
+    saleId?: number,
+    supplierId?: number
+  ) => {
+    const product = products.find((p) => p.id === productId)
+    if (!product) return
+
+    const movementData = {
+      id_producto: productId,
+      tipo: type,
+      cantidad: quantity,
+      stock_anterior: previousStock,
+      stock_nuevo: newStock,
+      costo_unitario: product.cost,
+      precio_unitario: product.price,
+      valor_total: quantity * product.price,
+      motivo: reason,
+      id_venta: saleId || undefined,
+      id_proveedor: supplierId || undefined,
+      usuario: 'Sistema',
     }
 
-    // GUARDAR DETALLES DE VENTA
-    // console.log('🔄 Creando detalles de venta...');
-    
-    for (const item of cart) {
-      let id_presentacion = null;
+    try {
+      // Guardar en BD
+      const movimientoBD = await addInventoryMovementToDB(movementData);
       
-      if (presentaciones.length > 0) {
-        const presentacion = presentaciones.find((p: any) => p.id_producto === item.productId);
-        if (presentacion) {
-          id_presentacion = presentacion.id_presentacion;
-          // console.log(`✅ Presentación encontrada: ${id_presentacion} para producto ${item.productId}`);
-        } else {
-          id_presentacion = presentaciones[0].id_presentacion;
-          // console.warn(`⚠️ Usando presentación por defecto: ${id_presentacion}`);
-        }
-      } else {
-        throw new Error('No hay presentaciones configuradas en el sistema');
-      }
-
-      const itemData = {
-        id_venta: ventaCreada.id_venta,
-        id_presentacion: id_presentacion,
-        cantidad: item.quantity,
-        precio_unitario: Number(item.price),
-        descuento: Number(item.discount) || 0,
-        subtotal: Number(item.subtotal),
-        nombre_producto: item.productName
-      }
+      const movement: InventoryMovement = {
+        id: movimientoBD.id_movimiento,
+        productId: productId,
+        productName: productName,
+        type: type,
+        quantity: quantity,
+        previousStock: previousStock,
+        newStock: newStock,
+        unitCost: product.cost,
+        unitPrice: product.price,
+        totalCost: quantity * product.cost,
+        totalValue: quantity * product.price,
+        reason: reason,
+        date: new Date().toISOString(),
+        id_venta: saleId,
+        venta_numero: saleId ? `V-${saleId}` : undefined,
+        id_proveedor: supplierId,
+        usuario: 'Sistema',
+      };
       
-      // console.log('📦 Enviando detalle:', itemData);
-      const resultadoDetalle = await api.createDetalleVenta(itemData);
-      // console.log('✅ Detalle creado:', resultadoDetalle);
+      setInventoryMovements((prev) => [movement, ...prev]);
+      
+    } catch (error) {
+      console.error('Error agregando movimiento:', error);
+      // Fallback: solo guarda localmente si falla la BD
+      const movement: InventoryMovement = {
+        id: Date.now(), // Temporal hasta que se guarde en BD
+        productId: productId,
+        productName: productName,
+        type: type,
+        quantity: quantity,
+        previousStock: previousStock,
+        newStock: newStock,
+        unitCost: product.cost,
+        unitPrice: product.price,
+        totalCost: quantity * product.cost,
+        totalValue: quantity * product.price,
+        reason: reason,
+        date: new Date().toISOString(),
+        id_venta: saleId,
+        venta_numero: saleId ? `V-${saleId}` : undefined,
+        id_proveedor: supplierId,
+        usuario: 'Sistema',
+      };
+      setInventoryMovements((prev) => [movement, ...prev]);
     }
-
-    // console.log('🎉 Todos los detalles creados exitosamente');
-
-    // 🔥 LUEGO ACTUALIZAR STOCK
-    console.log('📊 Actualizando stock en BD...');
-    for (const item of cart) {
-      const product = products.find(p => p.id === item.productId);
-      if (product) {
-        const nuevoStock = product.stock - item.quantity;
-        console.log(`🔄 Actualizando stock producto ${product.id}: ${product.stock} -> ${nuevoStock}`);
-        await updateStockInDatabase(product.id, nuevoStock);
-      }
-    }
-
-    // 🔥 RECARGAR DATOS
-    console.log('🔄 Recargando ventas desde BD...');
-    await loadSalesFromDB();
-
-    console.log('🔄 Recargando productos desde BD...');
-    await loadProducts();
-
-    console.log('✅ Datos recargados desde BD');
-
-    // 🔥 AGREGAR MOVIMIENTOS DE INVENTARIO
-    console.log('📦 Agregando movimientos de inventario...');
-    for (const item of cart) {
-      const product = products.find(p => p.id === item.productId);
-      if (product) {
-        const nuevoStock = product.stock - item.quantity;
-        addInventoryMovement(
-          product.id,
-          product.name,
-          "salida",
-          item.quantity,
-          product.stock,
-          nuevoStock,
-          `Venta ${ventaCreada.numero_venta}`,
-        );
-        console.log(`📝 Movimiento agregado para ${product.name}`);
-      }
-    }
-
-    // Limpiar carrito
-    setCart([]);
-    setSelectedCustomer(null);
-    setCurrentSubtotal(0);
-    setCurrentDiscount(0);
-    setCurrentTotal(0);
-    setCurrentBreakdown([]);
-    setCurrentPromotion(null);
-    
-    console.log('🎉 Venta completada y datos persistidos');
-    alert('✅ Venta completada exitosamente!');
-
-  } catch (error: any) {
-    console.error('❌ Error completando venta:', error)
-    alert('Error al procesar la venta: ' + error.message)
   }
-}
+  
+//================================================================================ FUNCION DE VENTA COMPLETA ================================================================================
+
+  const completeSale = async () => {
+    if (cart.length === 0) return
+
+    try {
+      // 1. CALCULAR VALORES NUMÉRICOS CORRECTOS
+      const subtotalNum = Number(currentSubtotal) || 0;
+      const discountNum = Number(currentDiscount) || 0;
+      const totalNum = Number(currentTotal) || Math.max(0.01, subtotalNum - discountNum);
+
+      console.log('🔍 DEBUG - Valores NUMÉRICOS:', {
+        subtotal: subtotalNum,
+        discount: discountNum, 
+        total: totalNum
+      });
+
+      // 2. PREPARAR DATOS PARA LA BD (USANDO LOS NÚMEROS CORRECTOS)
+      const saleData = {
+        numero_venta: `V-${Date.now().toString().slice(-6)}`,
+        id_cliente: selectedCustomer?.id || null,
+        id_promocion: currentPromotion?.id || null,
+        subtotal: subtotalNum,  
+        descuento: discountNum, 
+        total: totalNum,       
+        fecha: new Date().toISOString().split('T')[0],
+        metodo_pago: mapPaymentMethodToDB(paymentMethod),
+        es_mayorista: isWholesaleSale || selectedCustomer?.isWholesale || false,
+        estado: 'completada'
+      }
+
+      console.log('📤 Enviando venta a BD:', saleData);
+      
+      // 3. GUARDAR EN BD
+      const ventaCreada = await api.createVenta(saleData);
+      console.log('✅ Venta creada en BD:', ventaCreada);
+
+      // 4. CREAR OBJETO SALE LOCAL
+      const sale: Sale = {
+        id: ventaCreada.id_venta,
+        saleNumber: ventaCreada.numero_venta,
+        customerId: selectedCustomer?.id,
+        customerName: selectedCustomer?.name,
+        items: cart.map((item) => {
+          const itemDiscount = currentBreakdown.find((b) => b.productId === item.productId);
+          return {
+            ...item,
+            discount: itemDiscount?.discountAmount || 0,
+          };
+        }),
+        subtotal: subtotalNum,    
+        discount: discountNum,    
+        promotionId: currentPromotion?.id,
+        promotionName: currentPromotion?.name,
+        discountBreakdown: currentBreakdown,
+        total: totalNum,          
+        date: new Date().toISOString(),
+        paymentMethod,
+        isWholesale: isWholesaleSale,
+        status: "completed",
+        isInternalPurchase: isInternalPurchase,
+      };
+
+      // 5. ACTUALIZAR ESTADO LOCAL
+      setSales(prev => [sale, ...prev]);
+
+      // 6. OBTENER PRESENTACIONES DE LA BD
+      let presentaciones = [];
+      try {
+        presentaciones = await api.getPresentaciones();
+        console.log('🔍 Presentaciones obtenidas:', presentaciones.length);
+      } catch (error) {
+        console.warn('⚠️ Error cargando presentaciones:', error);
+      }
+
+      // 7. GUARDAR DETALLES DE VENTA
+      console.log('🔄 Creando detalles de venta...');
+      
+      for (const item of cart) {
+        let id_presentacion = null;
+        
+        if (presentaciones.length > 0) {
+          const presentacion = presentaciones.find((p: any) => p.id_producto === item.productId);
+          if (presentacion) {
+            id_presentacion = presentacion.id_presentacion;
+            console.log(`✅ Presentación encontrada: ${id_presentacion} para producto ${item.productId}`);
+          } else {
+            id_presentacion = presentaciones[0].id_presentacion;
+            console.warn(`⚠️ Usando presentación por defecto: ${id_presentacion}`);
+          }
+        } else {
+          throw new Error('No hay presentaciones configuradas en el sistema');
+        }
+
+        const itemData = {
+          id_venta: ventaCreada.id_venta,
+          id_presentacion: id_presentacion,
+          cantidad: item.quantity,
+          precio_unitario: Number(item.price),
+          descuento: Number(item.discount) || 0,
+          subtotal: Number(item.subtotal),
+          nombre_producto: item.productName
+        };
+        
+        console.log('📦 Enviando detalle:', itemData);
+        const resultadoDetalle = await api.createDetalleVenta(itemData);
+        console.log('✅ Detalle creado:', resultadoDetalle);
+      }
+
+      console.log('🎉 Todos los detalles creados exitosamente');
+
+      // 8. ACTUALIZAR STOCK EN BD
+      console.log('📊 Actualizando stock en BD...');
+      for (const item of cart) {
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
+          const nuevoStock = product.stock - item.quantity;
+          console.log(`🔄 Actualizando stock producto ${product.id}: ${product.stock} -> ${nuevoStock}`);
+          await updateStockInDatabase(product.id, nuevoStock);
+        }
+      }
+
+      // 9. RECARGAR DATOS
+      console.log('🔄 Recargando ventas desde BD...');
+      await loadSalesFromDB();
+
+      console.log('🔄 Recargando productos desde BD...');
+      await loadProducts();
+
+      console.log('✅ Datos recargados desde BD');
+
+      // 10. AGREGAR MOVIMIENTOS DE INVENTARIO
+      console.log('📦 Agregando movimientos de inventario...');
+      for (const item of cart) {
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
+          const nuevoStock = product.stock - item.quantity;
+          addInventoryMovement(
+            product.id,
+            product.name,
+            "salida",
+            item.quantity,
+            product.stock,
+            nuevoStock,
+            `Venta ${ventaCreada.numero_venta}`,
+            ventaCreada.id_venta,
+          );
+          console.log(`📝 Movimiento agregado para ${product.name}`);
+        }
+      }
+
+      // 11. LIMPIAR CARRITO Y ESTADOS
+      setCart([]);
+      setSelectedCustomer(null);
+      setCurrentSubtotal(0);
+      setCurrentDiscount(0);
+      setCurrentTotal(0);
+      setCurrentBreakdown([]);
+      setCurrentPromotion(null);
+      setIsWholesaleSale(false); 
+      setIsInternalPurchase(false);
+      
+      console.log('🎉 Venta completada y datos persistidos');
+      alert('✅ Venta completada exitosamente!');
+
+    } catch (error: any) {
+      console.error('❌ Error completando venta:', error);
+      alert('Error al procesar la venta: ' + error.message);
+    }
+  };
 
 //------------------------------------------------------- FUNCIONES ---------------------------------------------------------------------
   
@@ -799,6 +1232,8 @@ const completeSale = async () => {
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>([])
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
+  const [isEditSupplierDialogOpen, setIsEditSupplierDialogOpen] = useState(false)
 
 //------------------------------------------------------- ESTADO CLIENTES/PROMOCIONES/ESTADO CARRO/ ---------------------------------------------------------------------
 
@@ -1035,7 +1470,6 @@ const completeSale = async () => {
     return { discount: totalDiscount, promotion: appliedPromotion, breakdown: discountBreakdown }
   }
 
-  // AGREGAR ESTE USEEFFECT JUSTO AQUÍ
   // Efecto para calcular descuentos automáticamente cuando cambia el carrito
   useEffect(() => {
     if (cart.length === 0) {
@@ -1047,15 +1481,38 @@ const completeSale = async () => {
       return
     }
 
-    const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0)
+    const subtotal = cart.reduce((sum, item) => {
+      const itemSubtotal = Number(item.subtotal) || 0; // ← CONVERTIR A NÚMERO
+      return sum + itemSubtotal;
+    }, 0);
     const { discount, promotion, breakdown } = calculateCartDiscount(cart, selectedCustomer)
+    const total = Math.max(0.01, subtotal - discount);
     
     setCurrentSubtotal(subtotal)
     setCurrentDiscount(discount)
-    setCurrentTotal(subtotal - discount)
+    setCurrentTotal(total)
     setCurrentBreakdown(breakdown)
     setCurrentPromotion(promotion)
   }, [cart, selectedCustomer])
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      console.log('🛒 Estado actual del carrito:', cart.map(item => ({
+        product: item.productName,
+        quantity: item.quantity,
+        price: item.price,
+        subtotal: item.subtotal,
+        discount: item.discount
+      })));
+      
+      // También mostrar los totales calculados
+      console.log('💰 Totales calculados:', {
+        currentSubtotal,
+        currentDiscount, 
+        currentTotal
+      });
+    }
+  }, [cart, currentSubtotal, currentDiscount, currentTotal]);
 
 //----------------------------------------------------------------- FUNCION PARA BUSQUEDA ---------------------------------------------------------------------------------
 
@@ -1298,6 +1755,7 @@ const completeSale = async () => {
     category: "",
     description: "Producto sin descripción",
     observations: "",
+    wholesalePrice: 0,
   })
 
   const [newSupplier, setNewSupplier] = useState({
@@ -1410,10 +1868,11 @@ const completeSale = async () => {
         category: categoriaNombre,
         categoryId: selectedCategoryId,
         description: newProduct.description,
-        wholesalePrice: newProduct.price * 0.9,
+        wholesalePrice: newProduct.wholesalePrice || newProduct.price * 0.9,
         expiryDate: undefined,
         warrantyMonths: undefined,
-        lastSoldDate: undefined
+        lastSoldDate: undefined,
+        observations: newProduct.observations || ""
       };
 
       // 6. ACTUALIZAR ESTADO LOCAL
@@ -1433,6 +1892,7 @@ const completeSale = async () => {
         category: "",
         description: "",
         observations: "",
+        wholesalePrice: 0
       });
 
       console.log('✅ Producto agregado exitosamente!');
@@ -1534,7 +1994,7 @@ const completeSale = async () => {
           previousStock,
           finalStock,
           reason,
-        )
+        );
       }
     }
   }
@@ -1543,7 +2003,7 @@ const completeSale = async () => {
 
   const deleteProduct = async (productId: number) => {
     try {
-      console.log('🗑️ Eliminando producto ID:', productId);
+      // console.log('🗑️ Eliminando producto ID:', productId);
       
       // VERIFICAR QUE EL ID SEA VÁLIDO
       if (!productId || isNaN(productId)) {
@@ -1555,16 +2015,16 @@ const completeSale = async () => {
       // VERIFICAR SI EL PRODUCTO EXISTE EN EL ESTADO LOCAL
       const product = products.find(p => p.id === productId);
       if (!product) {
-        console.error('❌ Producto no encontrado en estado local:', productId);
-        alert('Producto no encontrado');
+        // console.error('❌ Producto no encontrado en estado local:', productId);
+        // alert('Producto no encontrado');
         return;
       }
       
-      console.log('🔍 Producto a eliminar:', {
-        id: product.id,
-        name: product.name,
-        sku: product.sku
-      });
+      // console.log('🔍 Producto a eliminar:', {
+      //   id: product.id,
+      //   name: product.name,
+      //   sku: product.sku
+      // });
       
       // 1. Eliminar de la BD - usar el ID real del backend
       await api.deleteProducto(productId);
@@ -1572,7 +2032,7 @@ const completeSale = async () => {
       // 2. Eliminar del estado local
       setProducts(products.filter(p => p.id !== productId));
       
-      console.log(`✅ Producto ${productId} eliminado exitosamente`);
+      // console.log(`✅ Producto ${productId} eliminado exitosamente`);
       
     } catch (error: any) {
       console.error('❌ Error eliminando producto:', error);
@@ -1592,9 +2052,12 @@ const completeSale = async () => {
     setSuppliers(suppliers.filter((s) => s.id_proveedor !== supplierId))
   }
 
+//----------------------------------------------------------------------------- FUNCION DE CARRITO DE COMPRAS ------------------------------------------------------------------------------------------------------
+
   // Funciones para ventas
   const addToCart = (product: Product) => {
     const existingItem = cart.find((item) => item.productId === product.id)
+    const priceToUse = isWholesaleSale ? product.wholesalePrice : product.price
 
     if (existingItem) {
       if (existingItem.quantity < product.stock) {
@@ -1603,8 +2066,9 @@ const completeSale = async () => {
             item.productId === product.id
               ? { 
                   ...item, 
-                  quantity: item.quantity + 1, 
-                  subtotal: (item.quantity + 1) * item.price,
+                  quantity: item.quantity + 1,
+                  price: priceToUse,
+                  subtotal: Number((item.quantity + 1) * priceToUse),
                   discount: calculateProductDiscount(product.id, product.price, item.quantity + 1, selectedCustomer).discount
                 }
               : item,
@@ -1620,8 +2084,8 @@ const completeSale = async () => {
             productId: product.id,
             productName: product.name,
             quantity: 1,
-            price: product.price,
-            subtotal: product.price,
+            price: priceToUse,
+            subtotal: Number(priceToUse),
             discount: discount
           },
         ])
@@ -1641,51 +2105,53 @@ const completeSale = async () => {
 
     const product = products.find((p) => p.id === productId)
     if (product && quantity <= product.stock) {
-      const { discount } = calculateProductDiscount(productId, product.price, quantity, selectedCustomer)
+      const priceToUse = isWholesaleSale ? product.wholesalePrice : product.price
+      const { discount } = calculateProductDiscount(productId, priceToUse, quantity, selectedCustomer)
+
       setCart(
         cart.map((item) =>
           item.productId === productId ? { 
             ...item, 
-            quantity, 
-            subtotal: quantity * item.price,
+            quantity,
+            price: priceToUse,
+            subtotal: Number(quantity * priceToUse),
             discount: discount
           } : item,
         ),
       )
     }
-
   }
 
-  const addInventoryMovement = (
-    productId: number,
-    productName: string,
-    type: "entrada" | "salida" | "ajuste",
-    quantity: number,
-    previousStock: number,
-    newStock: number,
-    reason: string,
-  ) => {
-    const product = products.find((p) => p.id === productId)
-    if (!product) return
+  // const addInventoryMovement = (
+  //   productId: number,
+  //   productName: string,
+  //   type: "entrada" | "salida" | "ajuste",
+  //   quantity: number,
+  //   previousStock: number,
+  //   newStock: number,
+  //   reason: string,
+  // ) => {
+  //   const product = products.find((p) => p.id === productId)
+  //   if (!product) return
 
-    const movement: InventoryMovement = {
-      id: movementCounter + 1,
-      productId,
-      productName,
-      type,
-      quantity,
-      previousStock,
-      newStock,
-      unitCost: product.cost,
-      unitPrice: product.price,
-      totalCost: quantity * product.cost,
-      totalValue: quantity * product.price,
-      reason,
-      date: new Date().toLocaleString(),
-    }
-    setMovementCounter(prev => prev + 1)
-    setInventoryMovements((prev) => [movement, ...prev])
-  }
+  //   const movement: InventoryMovement = {
+  //     id: movementCounter + 1,
+  //     productId,
+  //     productName,
+  //     type,
+  //     quantity,
+  //     previousStock,
+  //     newStock,
+  //     unitCost: product.cost,
+  //     unitPrice: product.price,
+  //     totalCost: quantity * product.cost,
+  //     totalValue: quantity * product.price,
+  //     reason,
+  //     date: new Date().toLocaleString(),
+  //   }
+  //   setMovementCounter(prev => prev + 1)
+  //   setInventoryMovements((prev) => [movement, ...prev])
+  // }
 
 //------------------------------------------------------------------------------------------ FUNCION PARA EDITAR PRODUCTO ---------------------------------------------------------------------------------------------------
 
@@ -1756,18 +2222,16 @@ const completeSale = async () => {
 
 //---------------------------------------------------------------------------- FUNCIONES DE EXPORTACIÓN EXCEL MEJORADAS ---------------------------------------------------------------------------------------
 
-<<<<<<< HEAD
-// EXPORTACION DE INVENTARIO A EXCEL
-=======
+  // EXPORTACION DE INVENTARIO A EXCEL
   // Funciones de exportación Excel
->>>>>>> 285683847685a869924337743034526f58466762
   const exportInventoryToExcel = () => {
     // 1. Datos principales (tipados correctamente)
     const mainData = inventoryMovements.map((movement) => {
       const ganancia = movement.type === "salida" ? (movement.unitPrice - movement.unitCost) * movement.quantity : 0
 
       return {
-        Fecha: movement.date,
+        "ID Movimiento": movement.id,
+        Fecha: new Date(movement.date).toLocaleDateString('es-MX'),
         Producto: movement.productName,
         "Tipo de Movimiento": movement.type.toUpperCase(),
         Cantidad: movement.quantity,
@@ -1778,6 +2242,9 @@ const completeSale = async () => {
         "Valor Total": `$${movement.totalValue.toFixed(2)}`,
         Ganancia: `$${ganancia.toFixed(2)}`,
         Motivo: movement.reason,
+        "Venta Relacionada": movement.venta_numero || "N/A",
+        "Proveedor": movement.proveedor_nombre || "N/A",
+        Usuario: movement.usuario || "Sistema"
       }
     })
 
@@ -1787,17 +2254,21 @@ const completeSale = async () => {
 
     // 2. Fila de totales (con tipos compatibles)
     const totalData = [{
-      Fecha: "TOTAL GENERAL",
+      "ID Movimiento": "TOTAL GENERAL",
+      Fecha: "",
       Producto: "",
       "Tipo de Movimiento": "",
-      Cantidad: "-", // ← Usar string en lugar de número vacío
+      Cantidad: "-",
       "Stock Anterior": "-",
-      "Stock Nuevo": "-", 
+      "Stock Nuevo": "-",
       "Costo Unitario": "",
       "Precio Unitario": "",
       "Valor Total": "",
       Ganancia: `$${totalGanancia.toFixed(2)}`,
       Motivo: "",
+      "Venta Relacionada": "",
+      "Proveedor": "",
+      Usuario: ""
     }]
 
     // 3. Combinar ambos arrays
@@ -1962,6 +2433,7 @@ const completeSale = async () => {
     .reduce((sum, m) => sum + (m.unitPrice - m.unitCost) * m.quantity, 0)
 
 //--------------------------------------------------------------- AÑADIR NUEVO PROVEEDOR -----------------------------------------------------------------------------------
+
   const addSupplier = async () => {
     if (newSupplier.empresa && newSupplier.contacto) {
       try {
@@ -2192,12 +2664,10 @@ const completeSale = async () => {
             </div>
           </div>
         )
-<<<<<<< HEAD
 
-{/*----------------------------------------------------- INVENTARIO DE PRODUCTOS ----------------------------------------------------------------------------------*/}
-=======
+{/*================================================================================ INVENTARIO DE PRODUCTOS ================================================================================*/}
+
 // Sección Productos
->>>>>>> 285683847685a869924337743034526f58466762
       case "products":
         return (
           <div className="space-y-6">
@@ -2512,7 +2982,8 @@ const completeSale = async () => {
           </div>
         )
 
-{/*----------------------------------------------------- VENTA DE PRODUCTOS ----------------------------------------------------------------------------------*/}
+{/*================================================================================ VENTA DE PRODUCTOS ================================================================================*/}
+
       case "sales":
         return (
           <div className="grid gap-6 md:grid-cols-2">
@@ -2532,10 +3003,11 @@ const completeSale = async () => {
                 <div className="grid gap-2 max-h-96 overflow-y-auto">
                   {searchProducts(searchTerm).map((product) => (
                     <div key={product.id} className="flex justify-between items-center p-3 border rounded-lg">
-                      <div>
+                      <div className="flex-1">
                         <div className="font-medium">{product.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          SKU: {product.sku} | ${product.price} - Stock: {product.stock}
+                          {product.sku} | Min: ${product.price}
+                          {isWholesaleSale && ` | May: $${product.wholesalePrice}`} - Stock: {product.stock}
                         </div>
                       </div>
                       <Button size="sm" onClick={() => addToCart(product)} disabled={product.stock === 0}>
@@ -2552,6 +3024,28 @@ const completeSale = async () => {
                 <CardTitle>Carrito de Compras</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      checked={isWholesaleSale} 
+                      onCheckedChange={setIsWholesaleSale}
+                      id="wholesale-mode"
+                    />
+                    <Label htmlFor="wholesale-mode" className="cursor-pointer">
+                      Venta Mayorista
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      checked={isInternalPurchase} 
+                      onCheckedChange={setIsInternalPurchase}
+                      id="internal-purchase"
+                    />
+                    <Label htmlFor="internal-purchase" className="cursor-pointer">
+                      Compra Interna
+                    </Label>
+                  </div>
+                </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {cart.map((item) => (
                     <div key={item.productId} className="flex justify-between items-center p-2 border rounded">
@@ -2604,7 +3098,8 @@ const completeSale = async () => {
           </div>
         )
 
-{/*----------------------------------------------------- PROVEEDORES ----------------------------------------------------------------------------------*/}
+{/*================================================================================ PROVEEDORES ================================================================================*/}
+
       case "suppliers":
         return (
           <div className="space-y-6">
@@ -2777,28 +3272,67 @@ const completeSale = async () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive">
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>¿Eliminar proveedor?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. Se eliminará permanentemente el proveedor "
-                                  {supplier.contacto}".
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteSupplier(supplier.id_proveedor)}>
-                                  Eliminar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <div className="flex gap-2">
+                            {/* BOTÓN EDITAR - NUEVO */}
+                            <Dialog
+                              open={isEditSupplierDialogOpen && editingSupplier?.id_proveedor === supplier.id_proveedor}
+                              onOpenChange={(open) => {
+                                setIsEditSupplierDialogOpen(open)
+                                if (!open) setEditingSupplier(null)
+                              }}
+                            >
+                              <DialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingSupplier(supplier)
+                                    setIsEditSupplierDialogOpen(true)
+                                  }}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Editar Proveedor</DialogTitle>
+                                </DialogHeader>
+                                {editingSupplier && (
+                                  <EditSupplierForm
+                                    supplier={editingSupplier}
+                                    onSave={updateSupplier}
+                                    onCancel={() => {
+                                      setIsEditSupplierDialogOpen(false)
+                                      setEditingSupplier(null)
+                                    }}
+                                  />
+                                )}
+                              </DialogContent>
+                            </Dialog>
+
+                            {/* BOTÓN ELIMINAR (tu código existente, pero corregido el texto) */}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive">
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar proveedor?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. Se eliminará permanentemente el proveedor "{supplier.empresa}".
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteSupplier(supplier.id_proveedor)}>
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -2809,7 +3343,8 @@ const completeSale = async () => {
           </div>
         )
 
-{/*----------------------------------------------------- MOVIMIENTO DE INVENTARIO ----------------------------------------------------------------------------------*/}
+{/*================================================================================ MOVIMIENTO DE INVENTARIO ================================================================================*/}
+
       case "inventory":
         return (
           <Card>
@@ -2889,6 +3424,7 @@ const completeSale = async () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>ID</TableHead>
                         <TableHead>Fecha</TableHead>
                         <TableHead>Producto</TableHead>
                         <TableHead>Tipo</TableHead>
@@ -2899,22 +3435,25 @@ const completeSale = async () => {
                         <TableHead>Precio Unit.</TableHead>
                         <TableHead>Valor Total</TableHead>
                         <TableHead>Ganancia</TableHead>
+                        <TableHead>Motivo</TableHead>
                         <TableHead>Venta</TableHead>
+                        <TableHead>Proveedor</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {inventoryMovements.map((movement) => (
                         <TableRow key={movement.id}>
-                          <TableCell className="text-sm">{movement.date}</TableCell>
+                          <TableCell className="text-sm font-mono">{movement.id}</TableCell>
+                          <TableCell className="text-sm">
+                            {new Date(movement.date).toLocaleDateString('es-MX')}
+                          </TableCell>
                           <TableCell>{movement.productName}</TableCell>
                           <TableCell>
                             <Badge
                               variant={
-                                movement.type === "entrada"
-                                  ? "default"
-                                  : movement.type === "salida"
-                                    ? "destructive"
-                                    : "secondary"
+                                movement.type === "entrada" ? "default" :
+                                movement.type === "salida" ? "destructive" :
+                                movement.type === "ajuste" ? "secondary" : "outline"
                               }
                             >
                               {movement.type.toUpperCase()}
@@ -2928,9 +3467,9 @@ const completeSale = async () => {
                           <TableCell>${movement.totalValue.toFixed(2)}</TableCell>
                           <TableCell>
                             <div className="text-sm">
-                              <div
-                                className={`font-medium ${movement.type === "salida" ? "text-green-600" : "text-gray-500"}`}
-                              >
+                              <div className={`font-medium ${
+                                movement.type === "salida" ? "text-green-600" : "text-gray-500"
+                              }`}>
                                 $
                                 {movement.type === "salida"
                                   ? ((movement.unitPrice - movement.unitCost) * movement.quantity).toFixed(2)
@@ -2938,7 +3477,15 @@ const completeSale = async () => {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="text-sm">{movement.reason}</TableCell>
+                          <TableCell className="text-sm max-w-xs truncate" title={movement.reason}>
+                            {movement.reason}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {movement.venta_numero || "N/A"}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {movement.proveedor_nombre || "N/A"}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -2949,7 +3496,7 @@ const completeSale = async () => {
           </Card>
         )
 
-{/*----------------------------------------------------------------------------------- HISTORIAL DE VENTAS--------------------------------------------------------------------------------------------*/}
+{/*================================================================================ HISTORIAL DE VENTAS ================================================================================*/}
       case "history":
         // console.log('🔍 Ventas disponibles para mostrar en historial:', sales.length);
         // if (sales.length > 0) {
@@ -3040,7 +3587,6 @@ const completeSale = async () => {
                       try {
                         const fechaDate = new Date(sale.date);
                         
-                        // 🔥 SOLUCIÓN RECOMENDADA - UTC
                         fechaFormateada = fechaDate.toLocaleDateString('es-ES', {
                           timeZone: 'UTC',
                           day: '2-digit',
@@ -3058,12 +3604,21 @@ const completeSale = async () => {
                           <TableCell className="font-mono font-medium">{sale.saleNumber}</TableCell>
                           <TableCell>{fechaFormateada}</TableCell>
                           <TableCell>
-                            <div className="text-sm">
-                              {sale.items.map((item, index) => (
-                                <div key={`${item.productId}-${index}`}>
-                                  {item.productName} x{item.quantity}
-                                </div>
-                              ))}
+                            <div>
+                              <div className="font-medium">{sale.customerName || "Sin cliente"}</div>
+                              {sale.isWholesale && (
+                                <Badge variant="outline" className="text-xs">Mayorista</Badge>
+                              )}
+                              {sale.isInternalPurchase && (
+                                <Badge variant="secondary" className="text-xs ml-1">Interna</Badge>
+                              )}
+                              <div className="text-sm text-muted-foreground mt-1">
+                                {sale.items.map((item, index) => (
+                                  <div key={`${item.productId}-${index}`}>
+                                    {item.productName} x{item.quantity}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell className="font-semibold">${sale.total.toLocaleString()}</TableCell>
@@ -3077,7 +3632,7 @@ const completeSale = async () => {
           </Card>
         )
 
-{/*----------------------------------------------------- SECCION CUSTOMERS ----------------------------------------------------------------------------------*/}
+{/*================================================================================ SECCION CUSTOMERS ================================================================================*/}
 
       case "customers":
         return (
@@ -3266,7 +3821,7 @@ const completeSale = async () => {
           </div>
         )
 
-{/*----------------------------------------------------- SECCION PROMOCIONES ----------------------------------------------------------------------------------*/}
+{/*================================================================================ SECCION PROMOCIONES ================================================================================*/}
 
       case "promotions":
         const uniqueCategories = Array.from(new Set(products.map(p => p.category)));
@@ -3645,7 +4200,7 @@ const completeSale = async () => {
           </div>
         )
 
-{/*----------------------------------------------------- SECCION REPORTES ----------------------------------------------------------------------------------*/}
+{/*================================================================================ SECCION REPORTES ================================================================================*/}
 
       case "reports":
         return (
@@ -3920,14 +4475,12 @@ const completeSale = async () => {
             </Card>
           </div>
         )
-
-
       default:
         return <div>Sección no encontrada</div>
     }
   }
 
-{/*----------------------------------------------------- TITULO DE PAGINA ----------------------------------------------------------------------------------*/}
+{/*================================================================================ TITULO DE PAGINA ================================================================================*/}
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
@@ -3945,9 +4498,3 @@ const completeSale = async () => {
     </div>
   )
 }
-/*Este código implementa un sistema web de inventarios y ventas en React que permite gestionar productos, proveedores, ventas y movimientos de inventario, mostrando un dashboard con métricas, gráficos y alertas de stock 
-crítico. Incluye funciones para agregar, editar, eliminar y buscar productos y proveedores, manejar un carrito de compras que descuenta stock al completar ventas, registrar automáticamente los movimientos de inventario, 
-y exportar reportes a Excel (productos, ventas e inventario) con totales y márgenes de ganancia; además, ofrece opciones de reset y recuperación de datos en ventas e inventario.*/
-
-
-

@@ -1,11 +1,11 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import viewsets, status
 from django.db.models import  Q
-from .models import Categoria, Producto, PresentacionProducto, Merma, Venta, DetalleVenta, Proveedor
+from .models import Categoria, Producto, PresentacionProducto, Merma, Venta, DetalleVenta, Proveedor, MovimientoInventario
 from .serializers import *
 
-# CATEGORÍAS
+#================================================================================ LISTA DE CATEGORÍAS ================================================================================
 @api_view(['GET', 'POST'])
 def lista_categorias(request):
     if request.method == 'GET':
@@ -19,7 +19,7 @@ def lista_categorias(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# PRODUCTOS
+#================================================================================ LISTA DE PRODUCTOS ================================================================================
 @api_view(['GET', 'POST'])
 def lista_productos(request):
     if request.method == 'GET':
@@ -33,6 +33,7 @@ def lista_productos(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+#================================================================================ DETALLE DE PRODUCTO ================================================================================
 @api_view(['GET', 'PUT', 'DELETE'])
 def detalle_producto(request, pk):
     try:
@@ -55,7 +56,7 @@ def detalle_producto(request, pk):
         producto.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-#------------------------------------------------------------------------- PRESENTACIONES -------------------------------------------------------------------------------------
+#================================================================================ LISTA DE PRESENTACIONES ================================================================================
 @api_view(['GET'])
 def lista_presentaciones(request):
     if request.method == 'GET':
@@ -63,7 +64,7 @@ def lista_presentaciones(request):
         serializer = PresentacionProductoSerializer(presentaciones, many=True)
         return Response(serializer.data)
 
-#-------------------------------------------------------------------------- MERMAS --------------------------------------------------------------------------------------
+#================================================================================ LISTA MERMAS ================================================================================
 @api_view(['GET', 'POST'])
 def lista_mermas(request):
     if request.method == 'GET':
@@ -77,7 +78,7 @@ def lista_mermas(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# VENTAS
+#================================================================================ LISTA DE VENTAS ================================================================================
 @api_view(['GET', 'POST'])
 def lista_ventas(request):
     if request.method == 'GET':
@@ -91,7 +92,7 @@ def lista_ventas(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-# DETALLE VENTA
+#================================================================================ LISTA DETALLE DE VENTAS ================================================================================
 @api_view(['GET', 'POST'])
 def lista_detalle_ventas(request):
     if request.method == 'GET':
@@ -112,6 +113,7 @@ def lista_detalle_ventas(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+#================================================================================ DETALLE DE VENTA ================================================================================
 @api_view(['GET', 'PUT', 'DELETE'])
 def detalle_venta(request, pk):
     try:
@@ -145,7 +147,7 @@ def detalle_venta(request, pk):
             print("Errores en el serializer:", serializer.errors)  # ← AGREGAR ESTO
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-#---------------------------------------------------------------- LISTA Y CREAR PROVEEDORES ---------------------------------------------------------------------------------
+#================================================================================ LISTA PROVEEDORES ================================================================================
 @api_view(['GET', 'POST'])
 def lista_proveedores(request):
     if request.method == 'GET':
@@ -166,7 +168,7 @@ def lista_proveedores(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# DETALLE, ACTUALIZAR Y ELIMINAR PROVEEDOR
+#================================================================================ DETALLE PROVEEDORES ================================================================================
 @api_view(['GET', 'PUT', 'DELETE'])
 def detalle_proveedor(request, pk):
     try:
@@ -194,7 +196,7 @@ def detalle_proveedor(request, pk):
         proveedor.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# BUSCAR PROVEEDORES
+#================================================================================ BUSQUEDA DE PROVEEDORES ================================================================================
 @api_view(['GET'])
 def buscar_proveedores(request):
     query = request.GET.get('q', '')
@@ -209,8 +211,46 @@ def buscar_proveedores(request):
         return Response(serializer.data)
     return Response([])
 
+#================================================================================ MOVIMIENTOS DEL INVENTARIO ================================================================================
+class MovimientoInventarioViewSet(viewsets.ModelViewSet):
+    queryset = MovimientoInventario.objects.all().order_by('-fecha_movimiento')
+    serializer_class = MovimientoInventarioSerializer
 
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            return Response(
+                {"error": f"Error creando movimiento: {str(e)}"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+    def list(self, request, *args, **kwargs):
+        try:
+            # Filtrar por producto si se proporciona
+            producto_id = request.query_params.get('producto_id')
+            if producto_id:
+                queryset = self.queryset.filter(id_producto=producto_id)
+            else:
+                queryset = self.queryset
+            
+            # Paginación opcional
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"error": f"Error obteniendo movimientos: {str(e)}"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 

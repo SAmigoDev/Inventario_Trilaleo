@@ -1,11 +1,13 @@
 from rest_framework import serializers
-from .models import Producto, Categoria, PresentacionProducto, Merma, Venta, DetalleVenta, Proveedor
+from .models import Producto, Categoria, PresentacionProducto, Merma, Venta, DetalleVenta, Proveedor, MovimientoInventario
 
+#================================================================================ CLASE CATEGORIA ================================================================================
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
         fields = '__all__'
 
+#================================================================================ CLASE PRODUCTO ================================================================================
 class ProductoSerializer(serializers.ModelSerializer):
     categoria_nombre = serializers.CharField(source='id_categoria.nombre', read_only=True)   
     class Meta:
@@ -24,6 +26,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             'categoria_nombre'
         ]
 
+#================================================================================ CLASE DE PRESENTACIÓN DE PRODUCTO ================================================================================
 class PresentacionProductoSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.CharField(source='id_producto.nombre', read_only=True)
     class Meta:
@@ -37,6 +40,7 @@ class PresentacionProductoSerializer(serializers.ModelSerializer):
             'precio'
             ]
 
+#================================================================================ CLASE DE MERMA ================================================================================
 class MermaSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.CharField(source='id_producto.nombre', read_only=True)
     class Meta:
@@ -50,6 +54,7 @@ class MermaSerializer(serializers.ModelSerializer):
             'motivo'
             ]
 
+#================================================================================ CLASE DE VENTAS ================================================================================
 class VentaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Venta
@@ -60,6 +65,7 @@ class VentaSerializer(serializers.ModelSerializer):
             'total'
         ]
 
+#================================================================================ CLASE DE DETALLE DE VENTAS ================================================================================
 class DetalleVentaSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.CharField(source='id_presentacion.id_producto.nombre', read_only=True)
     presentacion_desc = serializers.CharField(source='id_presentacion.descripcion', read_only=True)
@@ -76,6 +82,7 @@ class DetalleVentaSerializer(serializers.ModelSerializer):
             'subtotal'
             ]
 
+#================================================================================ CLASE DE PROVEEDORES ================================================================================
 class ProveedorSerializer(serializers.ModelSerializer):
     # Campo calculado para mostrar estado como texto
     estado_display = serializers.SerializerMethodField()
@@ -103,7 +110,7 @@ class ProveedorSerializer(serializers.ModelSerializer):
     def get_estado_display(self, obj):
         return "Activo" if obj.activo else "Inactivo"
 
-# Serializer simplificado para listas
+#================================================================================ CLASE DE LISTA DE PROVEEDORES ================================================================================
 class ProveedorListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
@@ -116,4 +123,32 @@ class ProveedorListSerializer(serializers.ModelSerializer):
             'ciudad',
             'productos_que_surte',
             'activo'
+        ]
+
+#================================================================================ CLASE DE MOVIMIENTOS DEL INVENTARIO ================================================================================
+class MovimientoInventarioSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.CharField(source='id_producto.nombre', read_only=True)
+    venta_numero = serializers.CharField(source='id_venta.numero_venta', read_only=True, allow_null=True)
+    proveedor_nombre = serializers.CharField(source='id_proveedor.empresa', read_only=True, allow_null=True)
+
+    class Meta:
+        model = MovimientoInventario
+        fields = [
+            'id_movimiento',
+            'id_producto',
+            'producto_nombre',
+            'tipo',
+            'cantidad',
+            'stock_anterior', 
+            'stock_nuevo',
+            'costo_unitario',
+            'precio_unitario',
+            'valor_total',
+            'motivo',
+            'fecha_movimiento',
+            'id_venta',
+            'venta_numero',
+            'id_proveedor',
+            'proveedor_nombre',
+            'usuario'
         ]

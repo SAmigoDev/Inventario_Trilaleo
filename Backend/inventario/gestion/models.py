@@ -1,6 +1,6 @@
 from django.db import models
 
-#------------------------------------------------------------------- MODEL CATEGORIA ----------------------------------------------------------------------------
+#================================================================================ MODEL CATEGORIA ================================================================================
 class Categoria(models.Model):
     id_categoria = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=50)
@@ -11,7 +11,7 @@ class Categoria(models.Model):
     def __str__(self):
         return self.nombre
 
-#------------------------------------------------------------------- MODEL PRODUCTO ----------------------------------------------------------------------------
+#================================================================================ MODEL PRODUCTO ================================================================================
 class Producto(models.Model):
     id_producto = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
@@ -30,7 +30,7 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
-#------------------------------------------------------------------- MODEL PRESENTACION PRODUCTO ----------------------------------------------------------------------------
+#================================================================================ MODEL PRESENTACION PRODUCTO ================================================================================
 class PresentacionProducto(models.Model):
     id_presentacion = models.AutoField(primary_key=True)
     id_producto = models.ForeignKey(Producto, on_delete=models.CASCADE, db_column='id_producto')
@@ -44,7 +44,7 @@ class PresentacionProducto(models.Model):
     def __str__(self):
         return f"{self.id_producto.nombre} - {self.descripcion}"
 
-#------------------------------------------------------------------- MODEL MERMA ----------------------------------------------------------------------------
+#================================================================================ MODEL MERMA ================================================================================
 class Merma(models.Model):
     id_merma = models.AutoField(primary_key=True)
     id_producto = models.ForeignKey(Producto, on_delete=models.CASCADE, db_column='id_producto')
@@ -58,7 +58,7 @@ class Merma(models.Model):
     def __str__(self):
         return f"Merma {self.id_producto.nombre} - {self.fecha}"
 
-#------------------------------------------------------------------- MODEL VENTA ----------------------------------------------------------------------------
+#================================================================================ MODEL VENTA ================================================================================
 class Venta(models.Model):
     
     id_venta = models.AutoField(primary_key=True)
@@ -78,7 +78,7 @@ class Venta(models.Model):
     def __str__(self):
         return f"Venta {self.numero_venta} - {self.fecha}"
 
-#------------------------------------------------------------------- MODEL DETALLE DE VENTA ----------------------------------------------------------------------------
+#================================================================================ MODEL DETALLE DE VENTA ================================================================================
 class DetalleVenta(models.Model):
     id_detalle = models.AutoField(primary_key=True)
     id_venta = models.ForeignKey(Venta, on_delete=models.CASCADE, db_column='id_venta')
@@ -93,7 +93,7 @@ class DetalleVenta(models.Model):
     def __str__(self):
         return f"Detalle {self.id_venta.id_venta}"
 
-#------------------------------------------------------------------- MODEL PROVEEDOR ----------------------------------------------------------------------------
+#================================================================================ MODEL PROVEEDOR ================================================================================
 class Proveedor(models.Model):
     id_proveedor = models.AutoField(primary_key=True)
     empresa = models.CharField(max_length=100)
@@ -116,3 +116,36 @@ class Proveedor(models.Model):
     
     def __str__(self):
         return self.empresa
+    
+#================================================================================ MOVIMIENTOS DE INVENTARIO ================================================================================
+
+class MovimientoInventario(models.Model):
+    TIPO_CHOICES = [
+        ('entrada', 'Entrada'),
+        ('salida', 'Salida'), 
+        ('ajuste', 'Ajuste'),
+        ('devolucion', 'Devolución'),
+    ]
+    
+    id_movimiento = models.AutoField(primary_key=True)
+    id_producto = models.ForeignKey('Producto', on_delete=models.CASCADE, db_column='id_producto')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    cantidad = models.IntegerField()
+    stock_anterior = models.IntegerField()
+    stock_nuevo = models.IntegerField()
+    costo_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    motivo = models.CharField(max_length=255)
+    fecha_movimiento = models.DateTimeField(auto_now_add=True)
+    id_venta = models.ForeignKey('Venta', on_delete=models.CASCADE, null=True, blank=True, db_column='id_venta')
+    id_proveedor = models.ForeignKey('Proveedor', on_delete=models.CASCADE, null=True, blank=True, db_column='id_proveedor')
+    usuario = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        db_table = 'movimientos_inventario'
+        verbose_name = 'Movimiento de Inventario'
+        verbose_name_plural = 'Movimientos de Inventario'
+
+    def __str__(self):
+        return f"Movimiento {self.id_movimiento} - {self.tipo} - {self.id_producto.nombre}"
