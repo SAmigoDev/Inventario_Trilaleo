@@ -4978,3 +4978,11 @@ export default function BusinessSalesSystem() {
     </div>
   );
 }
+
+/*
+Avance de Page.tsx avanzado con:
+Alberto garcia
+Diego Jorquera
+29-10-2025
+Parte desarrollada: FrondEnt
+*/
