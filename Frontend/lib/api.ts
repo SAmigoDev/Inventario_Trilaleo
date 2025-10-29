@@ -200,16 +200,34 @@ export const api = {
     return response.json();
   },
 
-  createMovimientoInventario: async (movimientoData: any): Promise<any> => {
-    const response = await fetch(`${API_BASE}/api/movimientos-inventario/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(movimientoData),
-    });
-    if (!response.ok) throw new Error('Error creating movimiento inventario');
-    return response.json();
+  createMovimientoInventario: async (movimientoData: any) => {
+    try {
+      console.log('📤 Enviando movimiento a API:', movimientoData);
+      
+      // Asegúrate de que la URL sea correcta - quita el /api/ duplicado
+      const response = await fetch(`${API_BASE}/movimientos-inventario`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(movimientoData),
+      });
+      
+      console.log('📊 Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
+        throw new Error(`Error creating movimiento inventario: ${response.status} - ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Movimiento creado:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error en createMovimientoInventario:', error);
+      throw error;
+    }
   },
 
   deleteMovimientoInventario: async (id: number): Promise<void> => {

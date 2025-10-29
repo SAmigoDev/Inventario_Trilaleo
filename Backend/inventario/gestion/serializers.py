@@ -97,7 +97,7 @@ class ProveedorSerializer(serializers.ModelSerializer):
             'telefono_secundario',
             'direccion',
             'ciudad',
-            'rfc',
+            'rut',
             'productos_que_surte',
             'condiciones_pago',
             'tiempo_entrega',
@@ -121,6 +121,7 @@ class ProveedorListSerializer(serializers.ModelSerializer):
             'email',
             'telefono',
             'ciudad',
+            'rut',
             'productos_que_surte',
             'activo'
         ]

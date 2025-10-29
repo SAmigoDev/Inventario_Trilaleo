@@ -103,7 +103,7 @@ class Proveedor(models.Model):
     telefono_secundario = models.CharField(max_length=20, blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)
     ciudad = models.CharField(max_length=50, blank=True, null=True)
-    rfc = models.CharField(max_length=20, blank=True, null=True)
+    rut = models.CharField(max_length=20, blank=True, null=True)
     productos_que_surte = models.TextField(blank=True, null=True)
     condiciones_pago = models.CharField(max_length=100, blank=True, null=True)
     tiempo_entrega = models.CharField(max_length=50, blank=True, null=True)
@@ -112,7 +112,7 @@ class Proveedor(models.Model):
     notas = models.TextField(blank=True, null=True)
     
     class Meta:
-        db_table = 'proveedores'  # Esto le dice a Django que use la tabla existente
+        db_table = 'proveedores'
     
     def __str__(self):
         return self.empresa

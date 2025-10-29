@@ -36,5 +36,4 @@ urlpatterns = [
     path('proveedores/', views.lista_proveedores, name='lista_proveedores'),
     path('proveedores/<int:pk>/', views.detalle_proveedor, name='detalle_proveedor'),
     path('proveedores/buscar/', views.buscar_proveedores, name='buscar_proveedores'),
-
 ]

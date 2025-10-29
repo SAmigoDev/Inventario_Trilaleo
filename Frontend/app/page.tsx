@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"; // useEffect
-import { api } from "@/lib/api"; // servicio API
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -64,8 +64,10 @@ import { Switch } from "@/components/ui/switch"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-//------------------------------------------------------------------- INTERFAZES --------------------------------------------------------------------------------
-// INTERFAZ DE PRODUCTO
+// ===================================================================================================================================================================================================================
+// SECCIÓN 1: INTERFACES Y TIPOS
+// ===================================================================================================================================================================================================================
+
 interface Product {
   id: number
   name: string
@@ -95,7 +97,7 @@ interface Supplier {
     direccion: string;              
     productos_que_surte: string; 
     ciudad?: string;
-    rfc?: string;
+    rut?: string;
     condiciones_pago?: string;
     tiempo_entrega?: string;
     activo?: boolean;
@@ -236,890 +238,1194 @@ interface DetalleVentaFromAPI {
   subtotal: number;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ===================================================================================================================================================================================================================
+// SECCIÓN 2: COMPONENTES DE FORMULARIOS
+// ===================================================================================================================================================================================================================
 
-  const EditProductForm: React.FC<{ 
-    product: Product; 
-    onSave: (product: Product) => void; 
-    onCancel: () => void;
-    categories: any[];
-  }> = ({ product, onSave, onCancel, categories }) => {
-    const [editedProduct, setEditedProduct] = useState(product)
+const EditProductForm: React.FC<{ 
+  product: Product; 
+  onSave: (product: Product) => void; 
+  onCancel: () => void;
+  categories: any[];
+}> = ({ product, onSave, onCancel, categories }) => {
+  const [editedProduct, setEditedProduct] = useState(product)
 
-    const handleSave = () => {
-      onSave(editedProduct)
-    }
+  const handleSave = () => {
+    onSave(editedProduct)
+  }
 
-    return (
-      <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+  return (
+    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+      <div>
+        <Label htmlFor="edit-product-name">Nombre</Label>
+        <Input
+          id="edit-product-name"
+          value={editedProduct.name}
+          onChange={(e) => setEditedProduct({ ...editedProduct, name: e.target.value })}
+          placeholder="Nombre del producto"
+        />
+      </div>
+      
+      {/* SKU no editable */}
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="edit-product-name">Nombre</Label>
+          <Label htmlFor="edit-product-sku">SKU</Label>
+          <div className="p-2 border rounded-md bg-gray-50 text-gray-600">
+            {editedProduct.sku}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            El SKU no se puede modificar
+          </p>
+        </div>
+        <div>
+          <Label htmlFor="edit-product-barcode">Código de Barras</Label>
           <Input
-            id="edit-product-name"
-            value={editedProduct.name}
-            onChange={(e) => setEditedProduct({ ...editedProduct, name: e.target.value })}
-            placeholder="Nombre del producto"
+            id="edit-product-barcode"
+            value={editedProduct.barcode}
+            onChange={(e) => setEditedProduct({ ...editedProduct, barcode: e.target.value })}
+            placeholder="7501234567890"
           />
         </div>
-        
-        {/* SKU no editable (como lo tienes) */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="edit-product-sku">SKU</Label>
-            <div className="p-2 border rounded-md bg-gray-50 text-gray-600">
-              {editedProduct.sku}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              El SKU no se puede modificar
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="edit-product-barcode">Código de Barras</Label>
-            <Input
-              id="edit-product-barcode"
-              value={editedProduct.barcode}
-              onChange={(e) => setEditedProduct({ ...editedProduct, barcode: e.target.value })}
-              placeholder="7501234567890"
-            />
-          </div>
-        </div>
-        
-        {/* PRECIOS MEJORADOS */}
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="edit-product-price">Precio Minorista</Label>
-            <Input
-              id="edit-product-price"
-              type="number"
-              value={editedProduct.price}
-              onChange={(e) => setEditedProduct({ ...editedProduct, price: Number(e.target.value) })}
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-product-wholesale">Precio Mayorista</Label>
-            <Input
-              id="edit-product-wholesale"
-              type="number"
-              value={editedProduct.wholesalePrice}
-              onChange={(e) => setEditedProduct({ ...editedProduct, wholesalePrice: Number(e.target.value) })}
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-product-cost">Costo</Label>
-            <Input
-              id="edit-product-cost"
-              type="number"
-              value={editedProduct.cost}
-              onChange={(e) => setEditedProduct({ ...editedProduct, cost: Number(e.target.value) })}
-              placeholder="0"
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="edit-product-stock">Stock</Label>
-            <Input
-              id="edit-product-stock"
-              type="number"
-              value={editedProduct.stock}
-              onChange={(e) => setEditedProduct({ ...editedProduct, stock: Number(e.target.value) })}
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-product-minstock">Stock Mínimo</Label>
-            <Input
-              id="edit-product-minstock"
-              type="number"
-              value={editedProduct.minStock}
-              onChange={(e) => setEditedProduct({ ...editedProduct, minStock: Number(e.target.value) })}
-              placeholder="1"
-              min="1"
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="edit-product-category">Categoría</Label>
-            <Select
-              value={editedProduct.category}
-              onValueChange={(value) => setEditedProduct({ ...editedProduct, category: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona una categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id_categoria} value={category.nombre}>
-                    {category.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {/* NUEVO: Fecha de vencimiento */}
-          <div>
-            <Label htmlFor="edit-product-expiry">Fecha de Vencimiento (opcional)</Label>
-            <Input
-              id="edit-product-expiry"
-              type="date"
-              value={editedProduct.expiryDate || ""}
-              onChange={(e) => setEditedProduct({ ...editedProduct, expiryDate: e.target.value })}
-            />
-          </div>
-        </div>
-        
-        {/* NUEVO: Garantía */}
+      </div>
+      
+      {/* PRECIOS MEJORADOS */}
+      <div className="grid grid-cols-3 gap-4">
         <div>
-          <Label htmlFor="edit-product-warranty">Garantía (meses)</Label>
+          <Label htmlFor="edit-product-price">Precio Minorista</Label>
           <Input
-            id="edit-product-warranty"
+            id="edit-product-price"
             type="number"
-            value={editedProduct.warrantyMonths || ""}
-            onChange={(e) => setEditedProduct({ ...editedProduct, warrantyMonths: Number(e.target.value) || undefined })}
+            value={editedProduct.price}
+            onChange={(e) => setEditedProduct({ ...editedProduct, price: Number(e.target.value) })}
             placeholder="0"
           />
         </div>
-        
         <div>
-          <Label htmlFor="edit-product-description">Descripción</Label>
-          <Textarea
-            id="edit-product-description"
-            value={editedProduct.description}
-            onChange={(e) => setEditedProduct({ ...editedProduct, description: e.target.value })}
-            placeholder="Descripción del producto"
+          <Label htmlFor="edit-product-wholesale">Precio Mayorista</Label>
+          <Input
+            id="edit-product-wholesale"
+            type="number"
+            value={editedProduct.wholesalePrice}
+            onChange={(e) => setEditedProduct({ ...editedProduct, wholesalePrice: Number(e.target.value) })}
+            placeholder="0"
           />
         </div>
-        
         <div>
-          <Label htmlFor="edit-product-observations">Observaciones</Label>
-          <Textarea
-            id="edit-product-observations"
-            value={editedProduct.observations || ""}
-            onChange={(e) => setEditedProduct({ ...editedProduct, observations: e.target.value })}
-            placeholder="Notas adicionales sobre el producto"
+          <Label htmlFor="edit-product-cost">Costo</Label>
+          <Input
+            id="edit-product-cost"
+            type="number"
+            value={editedProduct.cost}
+            onChange={(e) => setEditedProduct({ ...editedProduct, cost: Number(e.target.value) })}
+            placeholder="0"
           />
-        </div>
-        
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="button" onClick={handleSave}>
-            Guardar
-          </Button>
         </div>
       </div>
-    )
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="edit-product-stock">Stock</Label>
+          <Input
+            id="edit-product-stock"
+            type="number"
+            value={editedProduct.stock}
+            onChange={(e) => setEditedProduct({ ...editedProduct, stock: Number(e.target.value) })}
+            placeholder="0"
+          />
+        </div>
+        <div>
+          <Label htmlFor="edit-product-minstock">Stock Mínimo</Label>
+          <Input
+            id="edit-product-minstock"
+            type="number"
+            value={editedProduct.minStock}
+            onChange={(e) => setEditedProduct({ ...editedProduct, minStock: Number(e.target.value) })}
+            placeholder="1"
+            min="1"
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="edit-product-category">Categoría</Label>
+          <Select
+            value={editedProduct.category}
+            onValueChange={(value) => setEditedProduct({ ...editedProduct, category: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecciona una categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id_categoria} value={category.nombre}>
+                  {category.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {/* Fecha de vencimiento */}
+        <div>
+          <Label htmlFor="edit-product-expiry">Fecha de Vencimiento (opcional)</Label>
+          <Input
+            id="edit-product-expiry"
+            type="date"
+            value={editedProduct.expiryDate || ""}
+            onChange={(e) => setEditedProduct({ ...editedProduct, expiryDate: e.target.value })}
+          />
+        </div>
+      </div>
+      
+      {/* Garantía */}
+      <div>
+        <Label htmlFor="edit-product-warranty">Garantía (meses)</Label>
+        <Input
+          id="edit-product-warranty"
+          type="number"
+          value={editedProduct.warrantyMonths || ""}
+          onChange={(e) => setEditedProduct({ ...editedProduct, warrantyMonths: Number(e.target.value) || undefined })}
+          placeholder="0"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="edit-product-description">Descripción</Label>
+        <Textarea
+          id="edit-product-description"
+          value={editedProduct.description}
+          onChange={(e) => setEditedProduct({ ...editedProduct, description: e.target.value })}
+          placeholder="Descripción del producto"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="edit-product-observations">Observaciones</Label>
+        <Textarea
+          id="edit-product-observations"
+          value={editedProduct.observations || ""}
+          onChange={(e) => setEditedProduct({ ...editedProduct, observations: e.target.value })}
+          placeholder="Notas adicionales sobre el producto"
+        />
+      </div>
+      
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="button" onClick={handleSave}>
+          Guardar
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// FORMULARIO DE EDICION DE PROVEEDORES
+const EditSupplierForm: React.FC<{
+  supplier: Supplier
+  onSave: (supplier: Supplier) => void
+  onCancel: () => void
+}> = ({ supplier, onSave, onCancel }) => {
+  const [editedSupplier, setEditedSupplier] = useState(supplier)
+
+  const handleSave = () => {
+    onSave(editedSupplier)
   }
 
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="edit-supplier-name">Nombre de la Empresa</Label>
+        <Input
+          id="edit-supplier-name"
+          value={editedSupplier.empresa}
+          onChange={(e) => setEditedSupplier({ ...editedSupplier, empresa: e.target.value })}
+          placeholder="Nombre de la empresa"
+        />
+      </div>
+      <div>
+        <Label htmlFor="edit-supplier-contact">Persona de Contacto</Label>
+        <Input
+          id="edit-supplier-contact"
+          value={editedSupplier.contacto}
+          onChange={(e) => setEditedSupplier({ ...editedSupplier, contacto: e.target.value })}
+          placeholder="Nombre del contacto"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="edit-supplier-email">Email</Label>
+          <Input
+            id="edit-supplier-email"
+            type="email"
+            value={editedSupplier.email}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, email: e.target.value })}
+            placeholder="email@empresa.com"
+          />
+        </div>
+        <div>
+          <Label htmlFor="edit-supplier-phone">Teléfono</Label>
+          <Input
+            id="edit-supplier-phone"
+            value={editedSupplier.telefono}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, telefono: e.target.value })}
+            placeholder="555-1234"
+          />
+        </div>
+      </div>
+      <div>
+        <Label htmlFor="edit-supplier-address">Dirección</Label>
+        <Input
+          id="edit-supplier-address"
+          value={editedSupplier.direccion}
+          onChange={(e) => setEditedSupplier({ ...editedSupplier, direccion: e.target.value })}
+          placeholder="Dirección completa"
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="edit-supplier-city">Ciudad</Label>
+          <Input
+            id="edit-supplier-city"
+            value={editedSupplier.ciudad || ""}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, ciudad: e.target.value })}
+            placeholder="Ciudad"
+          />
+        </div>
+        <div>
+          <Label htmlFor="edit-supplier-rut">RUT</Label>
+          <Input
+            id="edit-supplier-rut"
+            value={editedSupplier.rut || ""}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, rut: e.target.value })}
+            placeholder="11.111.111-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="edit-supplier-delivery">Tiempo de Entrega</Label>
+          <Input
+            id="edit-supplier-delivery"
+            value={editedSupplier.tiempo_entrega || ""}
+            onChange={(e) => setEditedSupplier({ ...editedSupplier, tiempo_entrega: e.target.value })}
+            placeholder="24-48 horas"
+          />
+        </div>
+      </div>
+      <div>
+        <Label htmlFor="edit-supplier-payment">Condiciones de Pago</Label>
+        <Select
+          value={editedSupplier.condiciones_pago || ""}
+          onValueChange={(value) => setEditedSupplier({ ...editedSupplier, condiciones_pago: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccione condición de pago" />
+          </SelectTrigger>
+          <SelectContent>
+            {CONDICIONES_PAGO.map((condicion) => (
+              <SelectItem key={condicion} value={condicion}>
+                {condicion}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="edit-supplier-products">Productos que Suministra</Label>
+        <Textarea
+          id="edit-supplier-products"
+          value={editedSupplier.productos_que_surte}
+          onChange={(e) => setEditedSupplier({ ...editedSupplier, productos_que_surte: e.target.value })}
+          placeholder="Laptops, Teclados, Monitores (separados por comas)"
+        />
+      </div>
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="edit-supplier-active"
+          checked={editedSupplier.activo !== false}
+          onCheckedChange={(checked) => setEditedSupplier({ ...editedSupplier, activo: checked })}
+        />
+        <Label htmlFor="edit-supplier-active" className="cursor-pointer">
+          Proveedor Activo
+        </Label>
+      </div>
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="button" onClick={handleSave}>
+          Guardar Cambios
+        </Button>
+      </div>
+    </div>
+  )
+}
 
-  // FORMULARIO DE EDICION DE PROVEEDORES
-  const EditSupplierForm: React.FC<{
-    supplier: Supplier
-    onSave: (supplier: Supplier) => void
-    onCancel: () => void
-  }> = ({ supplier, onSave, onCancel }) => {
-    const [editedSupplier, setEditedSupplier] = useState(supplier)
+// ===================================================================================================================================================================================================================
+// SECCIÓN 3: CONSTANTES Y CONFIGURACIONES
+// ===================================================================================================================================================================================================================
 
-    const handleSave = () => {
-      onSave(editedSupplier)
+const CONDICIONES_PAGO = [
+  "Tarjeta de Crédito",
+  "Tarjeta de Débito", 
+  "Transferencia",
+  "Efectivo",
+  "Cheque",
+  "Otro medio"
+] as const;
+
+const DEFAULT_MIN_STOCK = 5;
+
+// ===================================================================================================================================================================================================================
+// SECCIÓN 4: FUNCIONES DE UTILIDAD
+// ===================================================================================================================================================================================================================
+
+// Funciones helper para mapeo de datos
+const mapPaymentMethod = (metodo: string): "cash" | "transfer" | "card" => {
+  switch(metodo) {
+    case 'efectivo': return 'cash'
+    case 'transferencia': return 'transfer'
+    case 'tarjeta': return 'card'
+    default: return 'cash'
+  }
+}
+
+const mapPaymentMethodToDB = (method: "cash" | "transfer" | "card"): string => {
+  switch(method) {
+    case 'cash': return 'efectivo'
+    case 'transfer': return 'transferencia'
+    case 'card': return 'tarjeta'
+    default: return 'efectivo'
+  }
+}
+
+const mapSaleStatus = (estado: string): "completed" | "cancelled" => {
+  if (!estado) return 'completed';
+  
+  const estadoLower = estado.toLowerCase();
+  switch(estadoLower) {
+    case 'completada': 
+    case 'completed': 
+    case 'finalizada':
+    case 'pagada':
+      return 'completed';
+    case 'cancelada': 
+    case 'cancelled': 
+    case 'cancelada':
+      return 'cancelled';
+    default: 
+      console.warn(`Estado de venta no reconocido: "${estado}", usando "completed" por defecto`);
+      return 'completed';
+  }
+};
+
+// Formateo de moneda
+const formatCurrency = (amount: number): string => {
+  if (isNaN(amount)) return '$0.00';
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+};
+
+// Cálculo de descuentos por producto
+const calculateProductDiscount = (
+  productId: number,
+  productPrice: number,
+  quantity: number,
+  customer: Customer | null,
+  promotions: Promotion[],
+  products: Product[]
+): { discount: number; promotion: Promotion | null } => {
+  const product = products.find((p) => p.id === productId)
+  if (!product) return { discount: 0, promotion: null }
+
+  const today = new Date().toISOString().split("T")[0]
+  let bestDiscount = 0
+  let bestPromotion: Promotion | null = null
+
+  promotions.forEach((promo) => {
+    if (
+      !promo.isActive ||
+      promo.startDate > today ||
+      promo.endDate < today ||
+      (promo.forFrequentOnly && (!customer || !customer.isFrequent))
+    ) {
+      return
     }
 
-    return (
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="edit-supplier-name">Nombre de la Empresa</Label>
-          <Input
-            id="edit-supplier-name"
-            value={editedSupplier.empresa}
-            onChange={(e) => setEditedSupplier({ ...editedSupplier, empresa: e.target.value })}
-            placeholder="Nombre de la empresa"
-          />
-        </div>
-        <div>
-          <Label htmlFor="edit-supplier-contact">Persona de Contacto</Label>
-          <Input
-            id="edit-supplier-contact"
-            value={editedSupplier.contacto}
-            onChange={(e) => setEditedSupplier({ ...editedSupplier, contacto: e.target.value })}
-            placeholder="Nombre del contacto"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="edit-supplier-email">Email</Label>
-            <Input
-              id="edit-supplier-email"
-              type="email"
-              value={editedSupplier.email}
-              onChange={(e) => setEditedSupplier({ ...editedSupplier, email: e.target.value })}
-              placeholder="email@empresa.com"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-supplier-phone">Teléfono</Label>
-            <Input
-              id="edit-supplier-phone"
-              value={editedSupplier.telefono}
-              onChange={(e) => setEditedSupplier({ ...editedSupplier, telefono: e.target.value })}
-              placeholder="555-1234"
-            />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="edit-supplier-address">Dirección</Label>
-          <Input
-            id="edit-supplier-address"
-            value={editedSupplier.direccion}
-            onChange={(e) => setEditedSupplier({ ...editedSupplier, direccion: e.target.value })}
-            placeholder="Dirección completa"
-          />
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="edit-supplier-city">Ciudad</Label>
-            <Input
-              id="edit-supplier-city"
-              value={editedSupplier.ciudad || ""}
-              onChange={(e) => setEditedSupplier({ ...editedSupplier, ciudad: e.target.value })}
-              placeholder="Ciudad"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-supplier-rfc">RFC</Label>
-            <Input
-              id="edit-supplier-rfc"
-              value={editedSupplier.rfc || ""}
-              onChange={(e) => setEditedSupplier({ ...editedSupplier, rfc: e.target.value })}
-              placeholder="RFC"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-supplier-delivery">Tiempo de Entrega</Label>
-            <Input
-              id="edit-supplier-delivery"
-              value={editedSupplier.tiempo_entrega || ""}
-              onChange={(e) => setEditedSupplier({ ...editedSupplier, tiempo_entrega: e.target.value })}
-              placeholder="24-48 horas"
-            />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="edit-supplier-payment">Condiciones de Pago</Label>
-          <Input
-            id="edit-supplier-payment"
-            value={editedSupplier.condiciones_pago || ""}
-            onChange={(e) => setEditedSupplier({ ...editedSupplier, condiciones_pago: e.target.value })}
-            placeholder="30 días crédito, Contado, etc."
-          />
-        </div>
-        <div>
-          <Label htmlFor="edit-supplier-products">Productos que Suministra</Label>
-          <Textarea
-            id="edit-supplier-products"
-            value={editedSupplier.productos_que_surte}
-            onChange={(e) => setEditedSupplier({ ...editedSupplier, productos_que_surte: e.target.value })}
-            placeholder="Laptops, Teclados, Monitores (separados por comas)"
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="edit-supplier-active"
-            checked={editedSupplier.activo !== false}
-            onCheckedChange={(checked) => setEditedSupplier({ ...editedSupplier, activo: checked })}
-          />
-          <Label htmlFor="edit-supplier-active" className="cursor-pointer">
-            Proveedor Activo
-          </Label>
-        </div>
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="button" onClick={handleSave}>
-            Guardar Cambios
-          </Button>
-        </div>
-      </div>
+    let applies = false
+    if (promo.appliesTo === "all") {
+      applies = true
+    } else if (promo.appliesTo === "specific" && promo.specificProducts.includes(productId)) {
+      applies = true
+    } else if (promo.appliesTo === "category" && promo.specificCategories.includes(product.category)) {
+      applies = true
+    }
+
+    if (!applies) return
+
+    let discount = 0
+    if (promo.discountType === "percentage") {
+      discount = (productPrice * quantity * promo.discountValue) / 100
+    } else if (promo.discountType === "fixed") {
+      discount = Math.min(promo.discountValue, productPrice * quantity)
+    } else if (promo.discountType === "bundle") {
+      if (quantity >= promo.bundleBuy) {
+        const sets = Math.floor(quantity / promo.bundleBuy)
+        const itemsToDiscount = sets * (promo.bundleBuy - promo.bundlePay)
+        discount = itemsToDiscount * productPrice
+      }
+    }
+
+    if (discount > bestDiscount) {
+      bestDiscount = discount
+      bestPromotion = promo
+    }
+  })
+
+  return { discount: bestDiscount, promotion: bestPromotion }
+}
+
+// Cálculo de descuentos del carrito
+const calculateCartDiscount = (
+  cartItems: SaleItem[], 
+  customer: Customer | null, 
+  promotions: Promotion[], 
+  products: Product[]
+) => {
+  let totalDiscount = 0
+  const discountBreakdown: DiscountBreakdown[] = []
+  let appliedPromotion: Promotion | null = null
+
+  cartItems.forEach((item) => {
+    const { discount, promotion } = calculateProductDiscount(
+      item.productId, 
+      item.price, 
+      item.quantity, 
+      customer, 
+      promotions, 
+      products
     )
+    if (discount > 0 && promotion) {
+      totalDiscount += discount
+      discountBreakdown.push({
+        productId: item.productId,
+        productName: item.productName,
+        promotionName: promotion.name,
+        discountAmount: discount,
+      })
+      if (!appliedPromotion) appliedPromotion = promotion
+    }
+  })
+
+  const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0)
+  if (appliedPromotion && subtotal < (appliedPromotion as Promotion).minPurchase) {
+    return { discount: 0, promotion: null, breakdown: [] }
   }
 
-//================================================================================ FUNCIONES BUSINESSSALESSYSTEM ================================================================================
+  return { discount: totalDiscount, promotion: appliedPromotion, breakdown: discountBreakdown }
+}
 
-export default function BusinessSalesSystem() {
-  // Estados
-  const [activeTab, setActiveTab] = useState("dashboard")
-  const [currentPromotion, setCurrentPromotion] = useState<Promotion | null>(null)
-  const [currentSubtotal, setCurrentSubtotal] = useState(0)
-  const [currentDiscount, setCurrentDiscount] = useState(0)
-  const [currentTotal, setCurrentTotal] = useState(0)
-  const [currentBreakdown, setCurrentBreakdown] = useState<DiscountBreakdown[]>([])
-  // const [movementCounter, setMovementCounter] = useState(0)
-  const [isWholesaleSale, setIsWholesaleSale] = useState(false)
-  const [isInternalPurchase, setIsInternalPurchase] = useState(false)
-  
-//================================================================================ FUNCION ADICION DE DATOS AL BACKEND ================================================================================
-  // Función para adaptar datos del frontend al backend
-  const adaptProductToAPI = (product: any) => {
-    return {
-      nombre: product.name,           // frontend: name → backend: nombre
+// Búsqueda de clientes
+const searchCustomers = (term: string, customers: Customer[]) => {
+  if (!term) return customers
+
+  const searchLower = term.toLowerCase()
+  return customers.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchLower) ||
+      c.email.toLowerCase().includes(searchLower) ||
+      c.phone.includes(term),
+  )
+}
+
+// Filtrado de productos
+const filterProducts = (term: string, products: Product[]) => {
+  if (!term) return products
+
+  const searchLower = term.toLowerCase()
+  return products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchLower) ||
+      p.sku.toLowerCase().includes(searchLower) ||
+      p.barcode.includes(term) ||
+      p.category.toLowerCase().includes(searchLower),
+  )
+}
+
+// Búsqueda de productos con stock
+const searchProducts = (term: string, products: Product[]) => {
+  if (!term) return products.filter((p) => p.stock > 0)
+
+  const searchLower = term.toLowerCase()
+  return products.filter(
+    (p) =>
+      p.stock > 0 &&
+      (p.name.toLowerCase().includes(searchLower) ||
+        p.sku.toLowerCase().includes(searchLower) ||
+        p.barcode.includes(term) ||
+        p.category.toLowerCase().includes(searchLower)),
+  )
+}
+
+// Adaptación de producto para API
+const adaptProductToAPI = (product: any) => {
+  return {
+    nombre: product.name,
+    descripcion: product.description,
+    sku: product.sku,
+    barcode: product.barcode,
+    precio: product.price,
+    stock: product.stock,
+    id_categoria: 1, // TEMPORAL: Cambia esto por un select de categorías
+  };
+};
+
+// Actualización de stock en BD
+const updateStockInDatabase = async (productId: number, newStock: number, product: Product) => {
+  try {
+    const productData = {
+      nombre: product.name,
       descripcion: product.description,
       sku: product.sku,
       barcode: product.barcode,
-      precio: product.price,          // frontend: price → backend: precio
-      stock: product.stock,
-      // Necesitas el ID de categoría, no el nombre
-      id_categoria: 1, // ← TEMPORAL: Cambia esto por un select de categorías
+      precio: product.price,
+      costo: product.cost,
+      stock: newStock,
+      min_stock: product.minStock,
+      id_categoria: product.categoryId,
     };
+
+    await api.updateProduct(productId, productData);
+  } catch (error) {
+    console.error(`Error actualizando stock en BD:`, error);
+    throw error;
+  }
+};
+
+// Agregar movimiento de inventario por compra a proveedor
+const addSupplierInventoryMovement = async (
+  productId: number,
+  quantity: number,
+  supplierId: number,
+  product: Product,
+  addInventoryMovement: Function,
+  updateStockInDatabase: Function
+) => {
+  const previousStock = product.stock;
+  const newStock = previousStock + quantity;
+
+  try {
+    await updateStockInDatabase(productId, newStock, product);
+    
+    await addInventoryMovement(
+      productId,
+      product.name,
+      "entrada",
+      quantity,
+      previousStock,
+      newStock,
+      "Compra a proveedor",
+      product.cost,
+      product.price,
+      undefined,
+      supplierId
+    );
+
+    console.log(`✅ Entrada de inventario registrada: ${quantity} unidades de ${product.name}`);
+    
+  } catch (error) {
+    console.error('❌ Error registrando entrada de inventario:', error);
+    throw error;
+  }
+};
+
+// Validación de promoción
+const validatePromotion = (promotion: any): { isValid: boolean; error?: string } => {
+  if (!promotion.name) {
+    return { isValid: false, error: "El nombre de la promoción es requerido" };
+  }
+
+  if (promotion.discountType === "bundle") {
+    if (promotion.bundleBuy <= 0 || promotion.bundlePay <= 0) {
+      return { isValid: false, error: "Para ofertas X por Y, debes especificar cantidades válidas" };
+    }
+    if (promotion.bundleBuy <= promotion.bundlePay) {
+      return { isValid: false, error: "La cantidad a comprar debe ser mayor que la cantidad a pagar" };
+    }
+  } else if (promotion.discountValue <= 0) {
+    return { isValid: false, error: "Debes especificar un valor de descuento válido" };
+  }
+
+  if (new Date(promotion.startDate) > new Date(promotion.endDate)) {
+    return { isValid: false, error: "La fecha de inicio no puede ser posterior a la fecha de fin" };
+  }
+
+  return { isValid: true };
+};
+
+// Generación de número de venta
+const generateSaleNumber = (): string => {
+  return `V-${Date.now().toString().slice(-6)}`;
+};
+
+// Formateo de fecha
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      timeZone: 'UTC',
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formateando fecha:', dateString);
+    return 'Fecha inválida';
+  }
+};
+
+// Cálculo de estadísticas de productos
+const calculateProductStats = (products: Product[]) => {
+  const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+  const totalValue = products.reduce((sum, p) => sum + (p.stock * p.price), 0);
+  const totalInvestment = products.reduce((sum, p) => sum + (p.stock * p.cost), 0);
+  const lowStockCount = products.filter(p => p.stock <= p.minStock).length;
+  const criticalStockCount = products.filter(p => p.stock === 0).length;
+
+  return {
+    totalStock,
+    totalValue,
+    totalInvestment,
+    lowStockCount,
+    criticalStockCount,
+    potentialProfit: totalValue - totalInvestment
   };
+};
 
-//================================================================================ FUNCIONES DE PROVEEDORES ================================================================================
+// Cálculo de estadísticas de ventas
+const calculateSalesStats = (sales: Sale[]) => {
+  const completedSales = sales.filter(sale => sale.status === "completed");
+  const totalRevenue = completedSales.reduce((sum, sale) => sum + sale.total, 0);
+  const totalDiscounts = completedSales.reduce((sum, sale) => sum + sale.discount, 0);
+  const averageSale = completedSales.length > 0 ? totalRevenue / completedSales.length : 0;
 
-  const [products, setProducts] = useState<Product[]>([])
+  return {
+    totalSales: completedSales.length,
+    totalRevenue,
+    totalDiscounts,
+    averageSale,
+    cancelledSales: sales.filter(sale => sale.status === "cancelled").length
+  };
+};
+
+// Función para determinar el estado del stock
+const getStockStatus = (stock: number, minStock: number): { status: string; variant: "default" | "secondary" | "destructive" } => {
+  if (stock <= minStock) {
+    return { status: "CRÍTICO", variant: "destructive" };
+  } else if (stock <= minStock * 2) {
+    return { status: "BAJO", variant: "secondary" };
+  } else {
+    return { status: "NORMAL", variant: "default" };
+  }
+};
+
+// Función para calcular días hasta vencimiento
+const getDaysUntilExpiry = (expiryDate?: string): number | null => {
+  if (!expiryDate) return null;
+  
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+  const diffTime = expiry.getTime() - today.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+// Función para determinar estado de vencimiento
+const getExpiryStatus = (expiryDate?: string): { status: string; color: string } => {
+  const daysUntilExpiry = getDaysUntilExpiry(expiryDate);
+  
+  if (daysUntilExpiry === null) {
+    return { status: "SIN FECHA", color: "gray" };
+  } else if (daysUntilExpiry < 0) {
+    return { status: "VENCIDO", color: "red" };
+  } else if (daysUntilExpiry <= 30) {
+    return { status: "PRÓXIMO", color: "orange" };
+  } else {
+    return { status: "VIGENTE", color: "green" };
+  }
+};
+
+// ===================================================================================================================================================================================================================
+// SECCIÓN 5: HOOKS PERSONALIZADOS
+// ===================================================================================================================================================================================================================
+
+// Hook para gestión de productos
+const useProducts = () => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  // console.log('📦 Productos disponibles en estado:', products.length, 'productos');
-  // console.log('🔍 Primeros 3 productos:', products.slice(0, 3).map(p => ({
-  //   id: p.id,
-  //   name: p.name
-  // })));
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(1); // Valor por defecto
-  const DEFAULT_MIN_STOCK = 5;
-  // Carga de categorías al iniciar
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const categoriasData = await api.getCategories();
-        setCategories(categoriasData);
-        if (categoriasData.length > 0) {
-          setSelectedCategoryId(categoriasData[0].id_categoria);
-        }
-      } catch (error) {
-        console.error('Error cargando categorías:', error);
-      }
-    };
-    loadCategories();
-  }, []);
-
-//================================================================================ FUNCIONES DE EDITAR PROVEEDORES ================================================================================
-
-  // Función para editar proveedor
-  const updateSupplier = async (updatedSupplier: Supplier) => {
-    try {
-      console.log('🔄 Actualizando proveedor:', updatedSupplier);
-      
-      // Actualizar en la BD
-      const supplierActualizado = await api.updateProveedor(updatedSupplier.id_proveedor, updatedSupplier);
-      console.log('✅ Proveedor actualizado en BD:', supplierActualizado);
-
-      // Actualizar estado local
-      setSuppliers(suppliers.map((s) => 
-        s.id_proveedor === updatedSupplier.id_proveedor ? supplierActualizado : s
-      ));
-
-      // Cerrar diálogo
-      setIsEditSupplierDialogOpen(false);
-      setEditingSupplier(null);
-
-      console.log('✅ Proveedor actualizado exitosamente');
-      
-    } catch (error: any) {
-      console.error('❌ Error actualizando proveedor:', error);
-      alert('Error al actualizar el proveedor: ' + error.message);
-    }
-  }
-
-//================================================================================ FUNCION PARA AGREGAR MOVIMIENTO DE ENTRADA POR COMPRA A VENDEDOR ================================================================================
-
-  const addSupplierInventoryMovement = async (
-    productId: number,
-    quantity: number,
-    supplierId: number,
-    reason: string = "Compra a proveedor"
-  ) => {
-    const product = products.find((p) => p.id === productId);
-    if (!product) return;
-
-    const previousStock = product.stock;
-    const newStock = previousStock + quantity;
-
-    try {
-      // Actualizar stock
-      await updateStockInDatabase(productId, newStock);
-      
-      // Agregar movimiento
-      await addInventoryMovement(
-        productId,
-        product.name,
-        "entrada",
-        quantity,
-        previousStock,
-        newStock,
-        reason,
-        undefined, // No es una venta
-        supplierId // ID del proveedor
-      );
-
-      console.log(`✅ Entrada de inventario registrada: ${quantity} unidades de ${product.name}`);
-      
-    } catch (error) {
-      console.error('❌ Error registrando entrada de inventario:', error);
-      alert('Error al registrar la entrada de inventario');
-    }
-  };
-
-//================================================================================ CARGA DE DATOS DESDE LA API ================================================================================
-  // 2. MODIFICAR LA ADAPTACIÓN DE PRODUCTOS DESDE LA API
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const productosData: ProductoFromAPI[] = await api.getProducts();
-        const adaptedProducts: Product[] = productosData.map(producto => ({
-          id: producto.id_producto,           
-          name: producto.nombre,              
-          sku: producto.sku || `SKU-${producto.id_producto}`,
-          barcode: producto.barcode || "",    
-          price: producto.precio || 0,        
-          cost: producto.costo || 0,            
-          stock: producto.stock,              
-          minStock: producto.min_stock || DEFAULT_MIN_STOCK,
-          category: producto.categoria_nombre, 
-          categoryId: producto.id_categoria,  // ← GUARDAR EL ID
-          description: producto.descripcion,  
-          wholesalePrice: producto.precio ? producto.precio * 0.9 : 0,
-        }));
-        setProducts(adaptedProducts);
-      } catch (error) {
-        console.error('Error cargando productos:', error);
-      }
-    };
-    loadProducts();
-  }, []);
-
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  // CARGA DATOS PROVEEDORES DESDE LA API
-  const loadSuppliers = async () => {
-      try {
-          setLoading(true);
-          const proveedoresData = await api.getProveedores();
-          setSuppliers(proveedoresData);
-      } catch (error) {
-          console.error('Error cargando proveedores:', error);
-          setSuppliers([]);
-      } finally {
-          setLoading(false);
-      }
-  };
-  // FUNCIÓN PARA AGREGAR NUEVO PROVEEDOR
-  const handleAddSupplier = async (newSupplier: Omit<Supplier, 'id_proveedor'>) => {
-      try {
-          const createdSupplier = await api.createProveedor(newSupplier);
-          setSuppliers(prev => [...prev, createdSupplier]);
-          return createdSupplier;
-      } catch (error) {
-          console.error('Error creando proveedor:', error);
-          throw error;
-      }
-  };
-  // FUNCIÓN PARA EDITAR PROVEEDOR
-  const handleEditSupplier = async (id: number, updatedData: Partial<Supplier>) => {
-      try {
-          const updatedSupplier = await api.updateProveedor(id, updatedData);
-          setSuppliers(prev => prev.map(s => 
-              s.id_proveedor === id ? updatedSupplier : s
-          ));
-          return updatedSupplier;
-      } catch (error) {
-          console.error('Error actualizando proveedor:', error);
-          throw error;
-      }
-  };
-  // Función para eliminar proveedor
-  const handleDeleteSupplier = async (id: number) => {
-      try {
-          await api.deleteProveedor(id);
-          setSuppliers(prev => prev.filter(s => s.id_proveedor !== id));
-      } catch (error) {
-          console.error('Error eliminando proveedor:', error);
-          throw error;
-      }
-  };
-  // FUNCIÓN PARA BUSCAR PROVEEDORES
-  const handleSearchSuppliers = async (query: string) => {
-      try {
-          if (query.trim() === '') {
-              loadSuppliers();
-              return;
-          }
-          const resultados = await api.searchProveedores(query);
-          setSuppliers(resultados);
-      } catch (error) {
-          console.error('Error buscando proveedores:', error);
-      }
-  };
-  useEffect(() => {
-      loadSuppliers();
-  }, []);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(1);
 
-//================================================================================ FUNCION EXPORTAR PROVEEDORES ================================================================================
-
-  const exportSuppliersToExcel = () => {
-    const data = suppliers.map((supplier) => ({
-      Empresa: supplier.empresa,
-      Contacto: supplier.contacto,
-      Email: supplier.email,
-      Teléfono: supplier.telefono,
-      Dirección: supplier.direccion,
-      Ciudad: supplier.ciudad || "",
-      RFC: supplier.rfc || "",
-      "Condiciones de Pago": supplier.condiciones_pago || "",
-      "Tiempo de Entrega": supplier.tiempo_entrega || "",
-      "Productos que Surte": supplier.productos_que_surte,
-      Estado: supplier.activo ? "Activo" : "Inactivo"
-    }))
-
-    exportToExcel(data, "proveedores", "Lista de Proveedores")
-  }
-
-//================================================================================ Detalle Ventas ================================================================================
-
-  const [sales, setSales] = useState<Sale[]>([])
-
-  useEffect(() => {
-    loadSalesFromDB()
-  }, [])
-
-  const loadSalesFromDB = async () => {
+  // Cargar productos desde la API
+  const loadProducts = async () => {
     try {
-      // console.log('🔄 Cargando ventas desde la BD...');
-      const ventasData = await api.getVentas()
-      // console.log('📊 Ventas obtenidas de la BD:', ventasData.length, 'ventas');
-
-      // ORDEN POR ID (MÁS RECIENTE PRIMERO)
-      const ventasOrdenadas = [...ventasData].sort((a, b) => b.id_venta - a.id_venta);
-
-      const ultimaVenta = ventasOrdenadas[0];
-      // console.log('🔍 Última venta (más reciente):', ultimaVenta);
-      
-      const salesWithDetails = await Promise.all(
-        ventasOrdenadas.map(async (venta: VentaFromAPI) => {
-          const detallesData: DetalleVentaFromAPI[] = await api.getDetalleVenta(venta.id_venta);
-          const clienteInfo = venta.id_cliente ? await api.getCliente(venta.id_cliente) : null
-          const promocionInfo = venta.id_promocion ? await api.getPromocion(venta.id_promocion) : null
-
-          const itemsConNombresReales = detallesData.map(detalle => {
-            // Busca el producto por ID en nuestro estado local
-            const product = products.find(p => p.id === detalle.id_presentacion);
-            
-            let nombreFinal;
-            
-            if (product) {
-              nombreFinal = product.name; 
-            } else if (detalle.nombre_producto && detalle.nombre_producto !== 'Producto') {
-              nombreFinal = detalle.nombre_producto;
-            } else {
-              nombreFinal = detalle.nombre_producto || 'Producto Desconocido';
-            }
-
-            // DEBUG para ventas recientes
-            // if (venta.id_venta >= 40) { // Últimas 5 ventas
-            //   console.log('🔍 Mapeando producto venta', venta.id_venta, ':', {
-            //     detalleId: detalle.id_detalle,
-            //     id_presentacion: detalle.id_presentacion,
-            //     nombreBD: detalle.nombre_producto,
-            //     productFound: product ? `${product.id}: ${product.name}` : 'NO ENCONTRADO',
-            //     nombreFinal: nombreFinal
-            //   });
-            // }
-
-            return {
-              productId: detalle.id_presentacion,
-              productName: nombreFinal, // 🔥 NOMBRE CORREGIDO
-              quantity: detalle.cantidad,
-              price: detalle.precio_unitario,
-              discount: detalle.descuento || 0,
-              subtotal: detalle.subtotal
-            }
-          });    
-
-          return {
-            id: venta.id_venta,
-            saleNumber: venta.numero_venta,
-            customerId: venta.id_cliente || undefined,
-            customerName: clienteInfo?.nombre || undefined,
-            items: itemsConNombresReales, // 🔥 ITEMS CON NOMBRES REALES
-            subtotal: venta.subtotal || detallesData.reduce((sum, d) => sum + d.subtotal, 0),
-            discount: venta.descuento || 0,
-            promotionId: venta.id_promocion || undefined,
-            promotionName: promocionInfo?.nombre || undefined,
-            discountBreakdown: [],
-            total: venta.total,
-            date: venta.fecha,
-            paymentMethod: mapPaymentMethod(venta.metodo_pago),
-            isWholesale: venta.es_mayorista || false,
-            status: mapSaleStatus(venta.estado)
-          }
-        })
-      )      
-      // console.log('✅ Ventas procesadas y ordenadas:', salesWithDetails.length);
-
-      // VERIFICACION DE ÚLTIMAS VENTAS
-      const ultimasVentas = salesWithDetails.slice(0, 3);
-      // console.log('🔍 Últimas 3 ventas procesadas:', ultimasVentas.map(v => ({
-      //   id: v.id,
-      //   saleNumber: v.saleNumber,
-      //   items: v.items.map(i => `${i.productName} x${i.quantity}`)
-      // })));
-      
-      setSales(salesWithDetails)
-      
+      setLoading(true);
+      const productosData: ProductoFromAPI[] = await api.getProducts();
+      const adaptedProducts: Product[] = productosData.map(producto => ({
+        id: producto.id_producto,
+        name: producto.nombre,
+        sku: producto.sku || `SKU-${producto.id_producto}`,
+        barcode: producto.barcode || "",
+        price: producto.precio || 0,
+        cost: producto.costo || 0,
+        stock: producto.stock,
+        minStock: producto.min_stock || DEFAULT_MIN_STOCK,
+        category: producto.categoria_nombre,
+        categoryId: producto.id_categoria,
+        description: producto.descripcion,
+        wholesalePrice: producto.precio ? producto.precio * 0.9 : 0,
+      }));
+      setProducts(adaptedProducts);
     } catch (error) {
-      console.error('❌ Error cargando ventas:', error)
+      console.error('Error cargando productos:', error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  // Funciones helper para mapear valores
-  const mapPaymentMethod = (metodo: string): "cash" | "transfer" | "card" => {
-    switch(metodo) {
-      case 'efectivo': return 'cash'
-      case 'transferencia': return 'transfer'
-      case 'tarjeta': return 'card'
-      default: return 'cash'
-    }
-  }
-
-  const mapPaymentMethodToDB = (method: "cash" | "transfer" | "card"): string => {
-    switch(method) {
-      case 'cash': return 'efectivo'
-      case 'transfer': return 'transferencia'
-      case 'card': return 'tarjeta'
-      default: return 'efectivo'
-    }
-  }
-
-  const mapSaleStatus = (estado: string): "completed" | "cancelled" => {
-    switch(estado) {
-      case 'completada': return 'completed'
-      case 'cancelada': return 'cancelled'
-      default: return 'completed'
-    }
-  }
-
-//================================================================================ FUNCION DE MOVIMIENTOS DE INVENTARIO ================================================================================
-
-  useEffect(() => {
-    loadInventoryMovementsFromDB();
-  }, []);
-
-  const addInventoryMovementToDB = async (movementData: {
-    id_producto: number
-    tipo: "entrada" | "salida" | "ajuste" | "devolucion"
-    cantidad: number
-    stock_anterior: number
-    stock_nuevo: number
-    costo_unitario: number
-    precio_unitario: number
-    valor_total: number
-    motivo: string
-    id_venta?: number
-    id_proveedor?: number
-    usuario?: string
-  }) => {
+  // Cargar categorías
+  const loadCategories = async () => {
     try {
-      const movimiento = await api.createMovimientoInventario(movementData);
-      console.log('✅ Movimiento guardado en BD:', movimiento);
-      return movimiento;
+      const categoriasData = await api.getCategories();
+      setCategories(categoriasData);
+      if (categoriasData.length > 0) {
+        setSelectedCategoryId(categoriasData[0].id_categoria);
+      }
     } catch (error) {
-      console.error('❌ Error guardando movimiento en BD:', error);
+      console.error('Error cargando categorías:', error);
+    }
+  };
+
+  // Agregar nuevo producto
+  const addProduct = async (productData: any) => {
+    try {
+      const ultimoSKU = products.reduce((max, product) => {
+        const skuNum = parseInt(product.sku.replace('SKU-', ''));
+        return isNaN(skuNum) ? max : Math.max(max, skuNum);
+      }, 0);
+      
+      const nuevoSKUNumero = ultimoSKU + 1;
+      const skuGenerado = `SKU-${nuevoSKUNumero.toString().padStart(3, '0')}`;
+
+      const productToCreate = {
+        nombre: productData.name,
+        descripcion: productData.description,
+        sku: skuGenerado,
+        barcode: productData.barcode || "",
+        precio: productData.price,
+        costo: productData.cost || 0,
+        stock: productData.stock || 0,
+        min_stock: productData.minStock || 1,
+        id_categoria: selectedCategoryId,
+      };
+
+      const productoCreado = await api.createProducto(productToCreate);
+      const categoriaNombre = categories.find(cat => cat.id_categoria === selectedCategoryId)?.nombre || "General";
+
+      const newProduct: Product = {
+        id: productoCreado.id_producto,
+        name: productData.name,
+        sku: skuGenerado,
+        barcode: productData.barcode,
+        price: productData.price,
+        cost: productData.cost,
+        stock: productData.stock,
+        minStock: productData.minStock,
+        category: categoriaNombre,
+        categoryId: selectedCategoryId,
+        description: productData.description,
+        wholesalePrice: productData.wholesalePrice || productData.price * 0.9,
+        expiryDate: undefined,
+        warrantyMonths: undefined,
+        lastSoldDate: undefined,
+        observations: productData.observations || ""
+      };
+
+      setProducts(prev => [...prev, newProduct]);
+      return newProduct;
+    } catch (error: any) {
+      console.error('Error agregando producto:', error);
       throw error;
     }
   };
 
-  // Función para cargar movimientos desde la BD
-  const loadInventoryMovementsFromDB = async () => {
+  // Actualizar producto
+  const updateProduct = async (updatedProduct: Product) => {
     try {
-      const movimientosData = await api.getMovimientosInventario();
-      const adaptedMovements: InventoryMovement[] = movimientosData.map((mov: any) => ({
-        id: mov.id_movimiento,
-        productId: mov.id_producto,
-        productName: mov.producto_nombre,
-        type: mov.tipo,
-        quantity: mov.cantidad,
-        previousStock: mov.stock_anterior,
-        newStock: mov.stock_nuevo,
-        unitCost: Number(mov.costo_unitario) || 0,
-        unitPrice: Number(mov.precio_unitario) || 0,
-        totalCost: Number(mov.costo_unitario) * mov.cantidad || 0,
-        totalValue: Number(mov.valor_total) || 0,
-        reason: mov.motivo,
-        date: mov.fecha_movimiento,
-        id_venta: mov.id_venta || undefined,
-        venta_numero: mov.venta_numero || undefined,
-        id_proveedor: mov.id_proveedor || undefined,
-        proveedor_nombre: mov.proveedor_nombre || undefined,
-        usuario: mov.usuario || 'Sistema',
-      }));
-      setInventoryMovements(adaptedMovements);
-    } catch (error) {
-      console.error('Error cargando movimientos:', error);
+      const categoriaEncontrada = categories.find(cat => cat.nombre === updatedProduct.category);
+      const id_categoria = categoriaEncontrada ? categoriaEncontrada.id_categoria : updatedProduct.categoryId;
+
+      const productData = {
+        id_producto: updatedProduct.id,
+        nombre: updatedProduct.name,
+        descripcion: updatedProduct.description,
+        sku: updatedProduct.sku,
+        barcode: updatedProduct.barcode,
+        precio: updatedProduct.price,
+        costo: updatedProduct.cost,
+        stock: updatedProduct.stock,
+        min_stock: updatedProduct.minStock,
+        id_categoria: id_categoria,
+      };
+
+      const response = await api.updateProduct(updatedProduct.id, productData);
+      setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+      return response;
+    } catch (error: any) {
+      console.error('Error actualizando producto:', error);
+      throw error;
     }
   };
 
-  // Reemplaza la función addInventoryMovement existente:
-  const addInventoryMovement = async (
-    productId: number,
-    productName: string,
-    type: "entrada" | "salida" | "ajuste" | "devolucion",
-    quantity: number,
-    previousStock: number,
-    newStock: number,
-    reason: string,
-    saleId?: number,
-    supplierId?: number
-  ) => {
-    const product = products.find((p) => p.id === productId)
-    if (!product) return
-
-    const movementData = {
-      id_producto: productId,
-      tipo: type,
-      cantidad: quantity,
-      stock_anterior: previousStock,
-      stock_nuevo: newStock,
-      costo_unitario: product.cost,
-      precio_unitario: product.price,
-      valor_total: quantity * product.price,
-      motivo: reason,
-      id_venta: saleId || undefined,
-      id_proveedor: supplierId || undefined,
-      usuario: 'Sistema',
-    }
-
+  // Eliminar producto
+  const deleteProduct = async (productId: number) => {
     try {
-      // Guardar en BD
-      const movimientoBD = await addInventoryMovementToDB(movementData);
-      
-      const movement: InventoryMovement = {
-        id: movimientoBD.id_movimiento,
-        productId: productId,
-        productName: productName,
-        type: type,
-        quantity: quantity,
-        previousStock: previousStock,
-        newStock: newStock,
-        unitCost: product.cost,
-        unitPrice: product.price,
-        totalCost: quantity * product.cost,
-        totalValue: quantity * product.price,
-        reason: reason,
-        date: new Date().toISOString(),
-        id_venta: saleId,
-        venta_numero: saleId ? `V-${saleId}` : undefined,
-        id_proveedor: supplierId,
-        usuario: 'Sistema',
+      await api.deleteProducto(productId);
+      setProducts(prev => prev.filter(p => p.id !== productId));
+    } catch (error: any) {
+      console.error('Error eliminando producto:', error);
+      throw error;
+    }
+  };
+
+  // Actualizar stock
+  const updateStock = async (productId: number, newStock: number, reason = "Ajuste manual") => {
+    const product = products.find((p) => p.id === productId);
+    if (!product) return;
+
+    const previousStock = product.stock;
+    const finalStock = Math.max(0, newStock);
+    
+    try {
+      const productData = {
+        nombre: product.name,
+        descripcion: product.description,
+        sku: product.sku,
+        barcode: product.barcode,
+        precio: product.price,
+        costo: product.cost,
+        stock: finalStock,
+        min_stock: product.minStock,
+        id_categoria: product.categoryId,
       };
+
+      await api.updateProduct(productId, productData);
+      setProducts(prev => prev.map(p => p.id === productId ? { ...p, stock: finalStock } : p));
       
-      setInventoryMovements((prev) => [movement, ...prev]);
-      
+      return { previousStock, finalStock };
     } catch (error) {
-      console.error('Error agregando movimiento:', error);
-      // Fallback: solo guarda localmente si falla la BD
-      const movement: InventoryMovement = {
-        id: Date.now(), // Temporal hasta que se guarde en BD
-        productId: productId,
-        productName: productName,
-        type: type,
-        quantity: quantity,
-        previousStock: previousStock,
-        newStock: newStock,
-        unitCost: product.cost,
-        unitPrice: product.price,
-        totalCost: quantity * product.cost,
-        totalValue: quantity * product.price,
-        reason: reason,
-        date: new Date().toISOString(),
-        id_venta: saleId,
-        venta_numero: saleId ? `V-${saleId}` : undefined,
-        id_proveedor: supplierId,
-        usuario: 'Sistema',
-      };
-      setInventoryMovements((prev) => [movement, ...prev]);
+      console.error('Error actualizando stock:', error);
+      throw error;
     }
-  }
-  
-//================================================================================ FUNCION DE VENTA COMPLETA ================================================================================
+  };
 
-  const completeSale = async () => {
-    if (cart.length === 0) return
+  // Filtrar productos
+  const filterProducts = (term: string) => {
+    if (!term) return products;
+
+    const searchLower = term.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(searchLower) ||
+        p.sku.toLowerCase().includes(searchLower) ||
+        p.barcode.includes(term) ||
+        p.category.toLowerCase().includes(searchLower),
+    );
+  };
+
+  // Buscar productos con stock
+  const searchProducts = (term: string) => {
+    if (!term) return products.filter((p) => p.stock > 0);
+
+    const searchLower = term.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.stock > 0 &&
+        (p.name.toLowerCase().includes(searchLower) ||
+          p.sku.toLowerCase().includes(searchLower) ||
+          p.barcode.includes(term) ||
+          p.category.toLowerCase().includes(searchLower)),
+    );
+  };
+
+  // Efecto para cargar datos iniciales
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  return {
+    products,
+    categories,
+    loading,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    loadProducts,
+    loadCategories,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    updateStock,
+    filterProducts,
+    searchProducts,
+    setProducts
+  };
+};
+
+// Hook para gestión de proveedores
+const useSuppliers = () => {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar proveedores
+  const loadSuppliers = async () => {
+    try {
+      setLoading(true);
+      const proveedoresData = await api.getProveedores();
+      setSuppliers(proveedoresData);
+    } catch (error) {
+      console.error('Error cargando proveedores:', error);
+      setSuppliers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Agregar proveedor
+  const addSupplier = async (supplierData: Omit<Supplier, 'id_proveedor'>) => {
+    try {
+      const createdSupplier = await api.createProveedor(supplierData);
+      setSuppliers(prev => [...prev, createdSupplier]);
+      return createdSupplier;
+    } catch (error) {
+      console.error('Error creando proveedor:', error);
+      throw error;
+    }
+  };
+
+  // Actualizar proveedor
+  const updateSupplier = async (id: number, updatedData: Partial<Supplier>) => {
+    try {
+      const updatedSupplier = await api.updateProveedor(id, updatedData);
+      setSuppliers(prev => prev.map(s => 
+        s.id_proveedor === id ? updatedSupplier : s
+      ));
+      return updatedSupplier;
+    } catch (error) {
+      console.error('Error actualizando proveedor:', error);
+      throw error;
+    }
+  };
+
+  // Eliminar proveedor
+  const deleteSupplier = async (id: number) => {
+    try {
+      await api.deleteProveedor(id);
+      setSuppliers(prev => prev.filter(s => s.id_proveedor !== id));
+    } catch (error) {
+      console.error('Error eliminando proveedor:', error);
+      throw error;
+    }
+  };
+
+  // Buscar proveedores
+  const searchSuppliers = async (query: string) => {
+    try {
+      if (query.trim() === '') {
+        await loadSuppliers();
+        return;
+      }
+      const resultados = await api.searchProveedores(query);
+      setSuppliers(resultados);
+    } catch (error) {
+      console.error('Error buscando proveedores:', error);
+    }
+  };
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    loadSuppliers();
+  }, []);
+
+  return {
+    suppliers,
+    loading,
+    loadSuppliers,
+    addSupplier,
+    updateSupplier,
+    deleteSupplier,
+    searchSuppliers,
+    setSuppliers
+  };
+};
+
+// Hook para gestión de ventas
+const useSales = () => {
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [cart, setCart] = useState<SaleItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Cargar ventas desde BD
+  const loadSalesFromDB = async (products: Product[]) => {
+    try {
+      setLoading(true);
+      const ventasData = await api.getVentas();
+      const ventasOrdenadas = [...ventasData].sort((a, b) => b.id_venta - a.id_venta);
+
+      const salesWithDetails = await Promise.all(
+        ventasOrdenadas.map(async (venta: VentaFromAPI) => {
+          try {
+            // Obtener detalles de la venta
+            const detallesData: DetalleVentaFromAPI[] = await api.getDetalleVenta(venta.id_venta);
+            
+            // Obtener información del cliente si existe
+            let clienteInfo = null;
+            if (venta.id_cliente) {
+              try {
+                clienteInfo = await api.getCliente(venta.id_cliente);
+              } catch (error) {
+                console.warn(`Cliente no encontrado para venta ${venta.id_venta}:`, error);
+              }
+            }
+
+            // Obtener información de promoción si existe
+            let promocionInfo = null;
+            if (venta.id_promocion) {
+              try {
+                promocionInfo = await api.getPromocion(venta.id_promocion);
+              } catch (error) {
+                console.warn(`Promoción no encontrada para venta ${venta.id_venta}:`, error);
+              }
+            }
+
+            // Mapear los items de la venta CORRECTAMENTE
+            const itemsConNombresReales = detallesData.map(detalle => {
+              // PRIMERO: Buscar el producto por ID en nuestros productos locales
+              const product = products.find(p => p.id === detalle.id_presentacion);
+              
+              let nombreFinal = detalle.nombre_producto;
+              
+              // Si no encontramos el producto en nuestros datos locales Y el nombre es genérico
+              if (!product && (!nombreFinal || nombreFinal === 'Producto' || nombreFinal === 'Producto Desconocido')) {
+                // Intentar obtener el nombre de alguna otra manera
+                // Por ahora, usaremos un nombre genérico mejorado
+                nombreFinal = `Producto #${detalle.id_presentacion}`;
+              } else if (product && product.name) {
+                // Si encontramos el producto, usar su nombre real
+                nombreFinal = product.name;
+              }
+
+              // Si después de todo esto el nombre sigue siendo problemático
+              if (!nombreFinal || nombreFinal === 'Producto' || nombreFinal === 'Producto Desconocido') {
+                nombreFinal = `Producto ID:${detalle.id_presentacion}`;
+              }
+
+              return {
+                productId: detalle.id_presentacion,
+                productName: nombreFinal,
+                quantity: detalle.cantidad,
+                price: detalle.precio_unitario,
+                discount: detalle.descuento || 0,
+                subtotal: detalle.subtotal
+              };
+            });
+
+            return {
+              id: venta.id_venta,
+              saleNumber: venta.numero_venta,
+              customerId: venta.id_cliente || undefined,
+              customerName: clienteInfo?.nombre || clienteInfo?.name || undefined,
+              items: itemsConNombresReales,
+              subtotal: venta.subtotal || detallesData.reduce((sum, d) => sum + d.subtotal, 0),
+              discount: venta.descuento || 0,
+              promotionId: venta.id_promocion || undefined,
+              promotionName: promocionInfo?.nombre || promocionInfo?.name || undefined,
+              discountBreakdown: [],
+              total: venta.total,
+              date: venta.fecha,
+              paymentMethod: mapPaymentMethod(venta.metodo_pago),
+              isWholesale: venta.es_mayorista || false,
+              status: mapSaleStatus(venta.estado),
+              isInternalPurchase: false // Por defecto
+            };
+          } catch (error) {
+            console.error(`Error procesando venta ${venta.id_venta}:`, error);
+            // Retornar una venta básica en caso de error
+            return {
+              id: venta.id_venta,
+              saleNumber: venta.numero_venta,
+              items: [],
+              subtotal: venta.subtotal || 0,
+              discount: venta.descuento || 0,
+              total: venta.total,
+              date: venta.fecha,
+              paymentMethod: mapPaymentMethod(venta.metodo_pago),
+              isWholesale: venta.es_mayorista || false,
+              status: mapSaleStatus(venta.estado),
+              discountBreakdown: []
+            };
+          }
+        })
+      );
+
+      setSales(salesWithDetails.filter(sale => sale !== null));
+    } catch (error) {
+      console.error('Error cargando ventas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Completar venta
+  const completeSale = async (saleData: {
+    cart: SaleItem[],
+    selectedCustomer: Customer | null,
+    currentSubtotal: number,
+    currentDiscount: number,
+    currentTotal: number,
+    currentPromotion: Promotion | null,
+    paymentMethod: "cash" | "transfer" | "card",
+    isWholesaleSale: boolean,
+    isInternalPurchase: boolean,
+    products: Product[],
+    updateStockInDatabase: (productId: number, newStock: number) => Promise<void>,
+    addInventoryMovement: Function
+  }) => {
+    if (saleData.cart.length === 0) return;
 
     try {
-      // 1. CALCULAR VALORES NUMÉRICOS CORRECTOS
-      const subtotalNum = Number(currentSubtotal) || 0;
-      const discountNum = Number(currentDiscount) || 0;
-      const totalNum = Number(currentTotal) || Math.max(0.01, subtotalNum - discountNum);
+      const subtotalNum = Number(saleData.currentSubtotal) || 0;
+      const discountNum = Number(saleData.currentDiscount) || 0;
+      const totalNum = Number(saleData.currentTotal) || Math.max(0.01, subtotalNum - discountNum);
 
-      console.log('🔍 DEBUG - Valores NUMÉRICOS:', {
-        subtotal: subtotalNum,
-        discount: discountNum, 
-        total: totalNum
-      });
-
-      // 2. PREPARAR DATOS PARA LA BD (USANDO LOS NÚMEROS CORRECTOS)
-      const saleData = {
+      const saleDataToSend = {
         numero_venta: `V-${Date.now().toString().slice(-6)}`,
-        id_cliente: selectedCustomer?.id || null,
-        id_promocion: currentPromotion?.id || null,
-        subtotal: subtotalNum,  
-        descuento: discountNum, 
-        total: totalNum,       
+        id_cliente: saleData.selectedCustomer?.id || null,
+        id_promocion: saleData.currentPromotion?.id || null,
+        subtotal: subtotalNum,
+        descuento: discountNum,
+        total: totalNum,
         fecha: new Date().toISOString().split('T')[0],
-        metodo_pago: mapPaymentMethodToDB(paymentMethod),
-        es_mayorista: isWholesaleSale || selectedCustomer?.isWholesale || false,
+        metodo_pago: mapPaymentMethodToDB(saleData.paymentMethod),
+        es_mayorista: saleData.isWholesaleSale || saleData.selectedCustomer?.isWholesale || false,
         estado: 'completada'
-      }
-
-      console.log('📤 Enviando venta a BD:', saleData);
-      
-      // 3. GUARDAR EN BD
-      const ventaCreada = await api.createVenta(saleData);
-      console.log('✅ Venta creada en BD:', ventaCreada);
-
-      // 4. CREAR OBJETO SALE LOCAL
-      const sale: Sale = {
-        id: ventaCreada.id_venta,
-        saleNumber: ventaCreada.numero_venta,
-        customerId: selectedCustomer?.id,
-        customerName: selectedCustomer?.name,
-        items: cart.map((item) => {
-          const itemDiscount = currentBreakdown.find((b) => b.productId === item.productId);
-          return {
-            ...item,
-            discount: itemDiscount?.discountAmount || 0,
-          };
-        }),
-        subtotal: subtotalNum,    
-        discount: discountNum,    
-        promotionId: currentPromotion?.id,
-        promotionName: currentPromotion?.name,
-        discountBreakdown: currentBreakdown,
-        total: totalNum,          
-        date: new Date().toISOString(),
-        paymentMethod,
-        isWholesale: isWholesaleSale,
-        status: "completed",
-        isInternalPurchase: isInternalPurchase,
       };
 
-      // 5. ACTUALIZAR ESTADO LOCAL
-      setSales(prev => [sale, ...prev]);
+      const ventaCreada = await api.createVenta(saleDataToSend);
 
-      // 6. OBTENER PRESENTACIONES DE LA BD
+      // OBTENER PRESENTACIONES DE LA BD
       let presentaciones = [];
       try {
         presentaciones = await api.getPresentaciones();
@@ -1128,10 +1434,10 @@ export default function BusinessSalesSystem() {
         console.warn('⚠️ Error cargando presentaciones:', error);
       }
 
-      // 7. GUARDAR DETALLES DE VENTA
+      // GUARDAR DETALLES DE VENTA
       console.log('🔄 Creando detalles de venta...');
       
-      for (const item of cart) {
+      for (const item of saleData.cart) {
         let id_presentacion = null;
         
         if (presentaciones.length > 0) {
@@ -1164,47 +1470,861 @@ export default function BusinessSalesSystem() {
 
       console.log('🎉 Todos los detalles creados exitosamente');
 
-      // 8. ACTUALIZAR STOCK EN BD
+      // ACTUALIZAR STOCK EN BD
       console.log('📊 Actualizando stock en BD...');
-      for (const item of cart) {
-        const product = products.find(p => p.id === item.productId);
+      for (const item of saleData.cart) {
+        const product = saleData.products.find(p => p.id === item.productId);
         if (product) {
           const nuevoStock = product.stock - item.quantity;
           console.log(`🔄 Actualizando stock producto ${product.id}: ${product.stock} -> ${nuevoStock}`);
-          await updateStockInDatabase(product.id, nuevoStock);
+          await saleData.updateStockInDatabase(product.id, nuevoStock);
         }
       }
 
-      // 9. RECARGAR DATOS
-      console.log('🔄 Recargando ventas desde BD...');
-      await loadSalesFromDB();
-
-      console.log('🔄 Recargando productos desde BD...');
-      await loadProducts();
-
-      console.log('✅ Datos recargados desde BD');
-
-      // 10. AGREGAR MOVIMIENTOS DE INVENTARIO
+      // AGREGAR MOVIMIENTOS DE INVENTARIO
       console.log('📦 Agregando movimientos de inventario...');
-      for (const item of cart) {
-        const product = products.find(p => p.id === item.productId);
+      for (const item of saleData.cart) {
+        const product = saleData.products.find(p => p.id === item.productId);
         if (product) {
           const nuevoStock = product.stock - item.quantity;
-          addInventoryMovement(
-            product.id,
-            product.name,
-            "salida",
-            item.quantity,
-            product.stock,
-            nuevoStock,
-            `Venta ${ventaCreada.numero_venta}`,
-            ventaCreada.id_venta,
-          );
-          console.log(`📝 Movimiento agregado para ${product.name}`);
+          
+          // Luego registrar movimiento de inventario
+          console.log(`📝 Registrando movimiento para ${product.name}`);
+          try {
+            await saleData.addInventoryMovement({
+              productId: product.id,
+              productName: product.name,
+              type: "salida",
+              quantity: item.quantity,
+              previousStock: product.stock,
+              newStock: nuevoStock,
+              reason: `Venta ${ventaCreada.numero_venta}`,
+              productCost: product.cost || 0, // Asegurar que no sea undefined
+              productPrice: product.price || 0, // Asegurar que no sea undefined
+              saleId: ventaCreada.id_venta
+            });
+            console.log(`✅ Movimiento registrado para ${product.name}`);
+          } catch (movementError) {
+            console.error(`❌ Error registrando movimiento para ${product.name}:`, movementError);
+            // Continuar con los demás productos aunque falle un movimiento
+            throw movementError; // O puedes comentar esta línea si quieres que continúe
+          }
         }
       }
 
-      // 11. LIMPIAR CARRITO Y ESTADOS
+      // CREAR OBJETO SALE LOCAL PARA EL ESTADO
+      const sale: Sale = {
+        id: ventaCreada.id_venta,
+        saleNumber: ventaCreada.numero_venta,
+        customerId: saleData.selectedCustomer?.id,
+        customerName: saleData.selectedCustomer?.name,
+        items: saleData.cart.map((item) => {
+          const itemDiscount = 0;
+          return {
+            ...item,
+            discount: itemDiscount,
+          };
+        }),
+        subtotal: subtotalNum,
+        discount: discountNum,
+        promotionId: saleData.currentPromotion?.id,
+        promotionName: saleData.currentPromotion?.name,
+        discountBreakdown: [],
+        total: totalNum,
+        date: new Date().toISOString(),
+        paymentMethod: saleData.paymentMethod,
+        isWholesale: saleData.isWholesaleSale,
+        status: "completed",
+        isInternalPurchase: saleData.isInternalPurchase,
+      };
+
+      // ACTUALIZAR ESTADO LOCAL (si estás usando esta función dentro del componente)
+      // setSales(prev => [sale, ...prev]);
+
+      console.log('🎉 Venta completada y datos persistidos');
+      return ventaCreada;
+
+    } catch (error: any) {
+      console.error('❌ Error completando venta:', error);
+      throw error;
+    }
+  };
+
+  // Agregar al carrito
+  const addToCart = (product: Product, isWholesaleSale: boolean, selectedCustomer: Customer | null, cart: SaleItem[], setCart: React.Dispatch<React.SetStateAction<SaleItem[]>>) => {
+    const existingItem = cart.find((item) => item.productId === product.id);
+    const priceToUse = isWholesaleSale ? product.wholesalePrice : product.price;
+
+    if (existingItem) {
+      if (existingItem.quantity < product.stock) {
+        setCart(
+          cart.map((item) =>
+            item.productId === product.id
+              ? { 
+                  ...item, 
+                  quantity: item.quantity + 1,
+                  price: priceToUse,
+                  subtotal: Number((item.quantity + 1) * priceToUse),
+                  discount: 0 // Se calcularía después
+                }
+              : item,
+          ),
+        );
+      }
+    } else {
+      if (product.stock > 0) {
+        setCart([
+          ...cart,
+          {
+            productId: product.id,
+            productName: product.name,
+            quantity: 1,
+            price: priceToUse,
+            subtotal: Number(priceToUse),
+            discount: 0
+          },
+        ]);
+      }
+    }
+  };
+
+  // Remover del carrito
+  const removeFromCart = (productId: number, cart: SaleItem[], setCart: React.Dispatch<React.SetStateAction<SaleItem[]>>) => {
+    setCart(cart.filter(item => item.productId !== productId));
+  };
+
+  // Actualizar cantidad en carrito
+  const updateCartQuantity = (productId: number, quantity: number, cart: SaleItem[], setCart: React.Dispatch<React.SetStateAction<SaleItem[]>>, products: Product[], isWholesaleSale: boolean, selectedCustomer: Customer | null) => {
+    if (quantity <= 0) {
+      removeFromCart(productId, cart, setCart);
+      return;
+    }
+
+    const product = products.find((p) => p.id === productId);
+    if (product && quantity <= product.stock) {
+      const priceToUse = isWholesaleSale ? product.wholesalePrice : product.price;
+
+      setCart(
+        cart.map((item) =>
+          item.productId === productId ? { 
+            ...item, 
+            quantity,
+            price: priceToUse,
+            subtotal: Number(quantity * priceToUse),
+            discount: 0
+          } : item,
+        ),
+      );
+    }
+  };
+
+  return {
+    sales,
+    cart,
+    loading,
+    setCart,
+    loadSalesFromDB,
+    completeSale,
+    addToCart,
+    removeFromCart,
+    updateCartQuantity,
+    setSales
+  };
+};
+
+// Hook para gestión de inventario
+const useInventory = () => {
+  const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Cargar movimientos de inventario
+  const loadInventoryMovementsFromDB = async () => {
+    try {
+      setLoading(true);
+      const movimientosData = await api.getMovimientosInventario();
+      const adaptedMovements: InventoryMovement[] = movimientosData.map((mov: any) => ({
+        id: mov.id_movimiento,
+        productId: mov.id_producto,
+        productName: mov.producto_nombre,
+        type: mov.tipo,
+        quantity: mov.cantidad,
+        previousStock: mov.stock_anterior,
+        newStock: mov.stock_nuevo,
+        unitCost: Number(mov.costo_unitario) || 0,
+        unitPrice: Number(mov.precio_unitario) || 0,
+        totalCost: Number(mov.costo_unitario) * mov.cantidad || 0,
+        totalValue: Number(mov.valor_total) || 0,
+        reason: mov.motivo,
+        date: mov.fecha_movimiento,
+        id_venta: mov.id_venta || undefined,
+        venta_numero: mov.venta_numero || undefined,
+        id_proveedor: mov.id_proveedor || undefined,
+        proveedor_nombre: mov.proveedor_nombre || undefined,
+        usuario: mov.usuario || 'Sistema',
+      }));
+      setInventoryMovements(adaptedMovements);
+    } catch (error) {
+      console.error('Error cargando movimientos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Agregar movimiento de inventario
+  const addInventoryMovement = async (movementData: {
+    productId: number,
+    productName: string,
+    type: "entrada" | "salida" | "ajuste" | "devolucion",
+    quantity: number,
+    previousStock: number,
+    newStock: number,
+    reason: string,
+    productCost: number,
+    productPrice: number,
+    saleId?: number,
+    supplierId?: number
+  }) => {
+    try {
+      console.log('📦 Creando movimiento de inventario:', movementData);
+
+      const movementToCreate = {
+        id_producto: movementData.productId || 0,
+        tipo: movementData.type || "salida",
+        cantidad: movementData.quantity || 0,
+        stock_anterior: movementData.previousStock || 0,
+        stock_nuevo: movementData.newStock || 0,
+        costo_unitario: Number(movementData.productCost) || 0,
+        precio_unitario: Number(movementData.productPrice) || 0,
+        valor_total: (movementData.quantity || 0) * (Number(movementData.productPrice) || 0),
+        motivo: movementData.reason || "Movimiento de inventario",
+        id_venta: movementData.saleId || null,
+        id_proveedor: movementData.supplierId || null,
+        usuario: 'Sistema',
+      };
+
+      if (!movementToCreate.id_producto || !movementToCreate.tipo || !movementToCreate.motivo) {
+        throw new Error(`Campos requeridos faltantes: id_producto=${movementToCreate.id_producto}, tipo=${movementToCreate.tipo}, motivo=${movementToCreate.motivo}`);
+      }
+
+      console.log('📤 Enviando datos validados a API:', movementToCreate);
+
+      const movimientoBD = await api.createMovimientoInventario(movementToCreate);
+      
+      console.log('✅ Movimiento creado en BD:', movimientoBD);
+
+      const movement: InventoryMovement = {
+        id: movimientoBD.id_movimiento,
+        productId: movementData.productId,
+        productName: movementData.productName,
+        type: movementData.type,
+        quantity: movementData.quantity,
+        previousStock: movementData.previousStock,
+        newStock: movementData.newStock,
+        unitCost: movementData.productCost,
+        unitPrice: movementData.productPrice,
+        totalCost: movementData.quantity * movementData.productCost,
+        totalValue: movementData.quantity * movementData.productPrice,
+        reason: movementData.reason,
+        date: new Date().toISOString(),
+        id_venta: movementData.saleId,
+        venta_numero: movementData.saleId ? `V-${movementData.saleId}` : undefined,
+        id_proveedor: movementData.supplierId,
+        usuario: 'Sistema',
+      };
+      
+      setInventoryMovements(prev => [movement, ...prev]);
+      return movement;
+    } catch (error: any) {
+      console.error('❌ Error agregando movimiento:', error);
+      console.error('📋 Datos que causaron el error:', movementData);
+      throw new Error(`Error al registrar movimiento de inventario: ${error.message}`);
+    }
+  };
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    loadInventoryMovementsFromDB();
+  }, []);
+
+  return {
+    inventoryMovements,
+    loading,
+    loadInventoryMovementsFromDB,
+    addInventoryMovement,
+    setInventoryMovements
+  };
+};
+
+// ===================================================================================================================================================================================================================
+// SECCIÓN 6: COMPONENTE PRINCIPAL
+// ===================================================================================================================================================================================================================
+
+export default function BusinessSalesSystem() {
+  // ===========================================================================
+  // SECCIÓN 6.1: INICIALIZACIÓN DE HOOKS PERSONALIZADOS
+  // ===========================================================================
+
+  // Inicializar todos los hooks personalizados
+  const productsHook = useProducts();
+  const salesHook = useSales();
+  const suppliersHook = useSuppliers();
+  const inventoryHook = useInventory();
+
+  // Desestructurar estados y funciones de los hooks
+  const {
+    products,
+    categories,
+    loading: productsLoading,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    addProduct: addProductHook,
+    updateProduct: updateProductHook,
+    deleteProduct: deleteProductHook,
+    updateStock: updateStockHook,
+    filterProducts: filterProductsHook,
+    searchProducts: searchProductsHook,
+    setProducts
+  } = productsHook;
+
+  const {
+    sales,
+    cart,
+    loading: salesLoading,
+    setCart,
+    loadSalesFromDB,
+    completeSale: completeSaleHook,
+    addToCart: addToCartHook,
+    removeFromCart: removeFromCartHook,
+    updateCartQuantity: updateCartQuantityHook,
+    setSales
+  } = salesHook;
+
+  const {
+    suppliers,
+    loading: suppliersLoading,
+    loadSuppliers: loadSuppliersHook,
+    addSupplier: addSupplierHook,
+    updateSupplier: updateSupplierHook,
+    deleteSupplier: deleteSupplierHook,
+    searchSuppliers: searchSuppliersHook,
+    setSuppliers
+  } = suppliersHook;
+
+  const {
+    inventoryMovements,
+    loading: inventoryLoading,
+    loadInventoryMovementsFromDB: loadInventoryMovementsHook,
+    addInventoryMovement: addInventoryMovementHook,
+    setInventoryMovements
+  } = inventoryHook;
+
+  // ===========================================================================
+  // SECCIÓN 6.2: ESTADOS DE UI Y FORMULARIOS
+  // ===========================================================================
+
+  // Estado de navegación y UI
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Estado de búsquedas y filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [productSearchTerm, setProductSearchTerm] = useState("");
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+
+  // Estado de clientes
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [newCustomer, setNewCustomer] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    notes: "",
+    isWholesale: false,
+  });
+
+  // Estado de promociones
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [newPromotion, setNewPromotion] = useState({
+    name: "",
+    description: "",
+    discountType: "percentage" as "percentage" | "fixed" | "bundle",
+    discountValue: 0,
+    bundleBuy: 0,
+    bundlePay: 0,
+    appliesTo: "all" as "all" | "specific" | "category",
+    specificProducts: [] as number[],
+    specificCategories: [] as string[],
+    minPurchase: 0,
+    forFrequentOnly: false,
+    isActive: true,
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+  });
+
+  // Estado de proceso de venta
+  const [currentPromotion, setCurrentPromotion] = useState<Promotion | null>(null);
+  const [currentSubtotal, setCurrentSubtotal] = useState(0);
+  const [currentDiscount, setCurrentDiscount] = useState(0);
+  const [currentTotal, setCurrentTotal] = useState(0);
+  const [currentBreakdown, setCurrentBreakdown] = useState<DiscountBreakdown[]>([]);
+  const [isWholesaleSale, setIsWholesaleSale] = useState(false);
+  const [isInternalPurchase, setIsInternalPurchase] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer" | "card">("cash");
+
+  // Estado de formularios y diálogos
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    sku: "",
+    barcode: "",
+    price: 0,
+    cost: 0,
+    stock: 0,
+    minStock: 1,
+    category: "",
+    description: "Producto sin descripción",
+    observations: "",
+    wholesalePrice: 0,
+  });
+
+  const [newSupplier, setNewSupplier] = useState({
+    empresa: "",
+    contacto: "",
+    email: "",
+    telefono: "",
+    direccion: "",
+    productos_que_surte: "",
+    ciudad: "",
+    rut: "",
+    condiciones_pago: "",
+    tiempo_entrega: "",
+  });
+
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [isEditSupplierDialogOpen, setIsEditSupplierDialogOpen] = useState(false);
+
+  // Estado de backup y recuperación
+  const [salesBackup, setSalesBackup] = useState<Sale[]>([]);
+  const [inventoryMovementsBackup, setInventoryMovementsBackup] = useState<InventoryMovement[]>([]);
+  const [showRecoverySales, setShowRecoverySales] = useState(false);
+  const [showRecoveryInventory, setShowRecoveryInventory] = useState(false);
+
+  // Estado de notificaciones y errores
+  const [notifications, setNotifications] = useState<{
+    type: 'success' | 'error' | 'warning' | 'info';
+    message: string;
+    timestamp: Date;
+  }[]>([]);
+
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  // Estado para datos de gráficos
+  const [dashboardData, setDashboardData] = useState({
+    salesChartData: [{ name: "Sin datos", value: 0 }],
+    productsSoldData: [{ name: "Sin ventas", value: 0 }],
+    categoryRevenueData: [{ name: "No hay ventas", value: 0 }]
+  });
+
+  // ===========================================================================
+  // SECCIÓN 6.3: EFFECTS COORDINADORES
+  // ===========================================================================
+
+  // Effect para carga inicial de datos
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        console.log('🔄 Inicializando datos del sistema...');
+        
+        // Cargar datos en paralelo
+        await Promise.all([
+          loadSuppliersHook(),
+          loadInventoryMovementsHook()
+        ]);
+
+        // Cargar categorías primero (necesarias para productos)
+        await productsHook.loadCategories();
+        
+        // Luego cargar productos y ventas
+        await Promise.all([
+          productsHook.loadProducts(),
+          loadSalesFromDB(productsHook.products)
+        ]);
+
+        console.log('✅ Todos los datos inicializados correctamente');
+        
+        setNotifications(prev => [{
+          type: 'success',
+          message: 'Sistema inicializado correctamente',
+          timestamp: new Date()
+        }, ...prev]);
+
+      } catch (error) {
+        console.error('❌ Error inicializando datos:', error);
+        setErrors(prev => ({ ...prev, initialization: 'Error al cargar los datos iniciales' }));
+        
+        setNotifications(prev => [{
+          type: 'error',
+          message: 'Error al cargar datos iniciales',
+          timestamp: new Date()
+        }, ...prev]);
+      }
+    };
+
+    initializeData();
+  }, []);
+
+  // Effect para calcular datos del dashboard
+  useEffect(() => {
+    const calculateDashboardData = () => {
+      // Datos para gráfico de ventas
+      const salesChartData = sales.length > 0
+        ? sales.map((sale, index) => ({
+            name: formatDate(sale.date),
+            value: sale.total,
+          }))
+        : [{ name: "Sin datos", value: 0 }];
+
+      // Datos para productos más vendidos
+      const productsSoldData = (() => {
+        const productSales = products.map((product) => {
+          const totalSold = sales.reduce((sum, sale) => {
+            const item = sale.items.find((item) => item.productId === product.id);
+            return sum + (item ? item.quantity : 0);
+          }, 0);
+          return { name: product.name, value: totalSold };
+        });
+
+        const filteredData = productSales.filter((item) => item.value > 0);
+        return filteredData.length > 0 ? filteredData.slice(0, 5) : [{ name: "Sin ventas", value: 0 }];
+      })();
+
+      // Datos para ingresos por categoría
+      const categoryRevenueData = (() => {
+        const categoryMap = new Map();
+
+        sales.forEach((sale) => {
+          if (sale.status === "completed") {
+            sale.items.forEach((item) => {
+              const product = products.find((p) => p.id === item.productId);
+              if (product) {
+                const currentValue = categoryMap.get(product.category) || 0;
+                const subtotalNum = typeof item.subtotal === 'string' 
+                  ? parseFloat(item.subtotal) 
+                  : Number(item.subtotal);
+                categoryMap.set(product.category, currentValue + subtotalNum);
+              }
+            });
+          }
+        });
+
+        const result = Array.from(categoryMap.entries()).map(([name, value]) => ({ 
+          name, 
+          value: Number(value.toFixed(2))
+        }));
+
+        return result.length > 0 ? result : [{ name: "No hay ventas", value: 0 }];
+      })();
+
+      setDashboardData({
+        salesChartData,
+        productsSoldData,
+        categoryRevenueData
+      });
+    };
+
+    if (products.length > 0 || sales.length > 0) {
+      calculateDashboardData();
+    }
+  }, [sales, products]);
+
+  // Effect para calcular descuentos automáticamente cuando cambia el carrito
+  useEffect(() => {
+    if (cart.length === 0) {
+      setCurrentSubtotal(0);
+      setCurrentDiscount(0);
+      setCurrentTotal(0);
+      setCurrentBreakdown([]);
+      setCurrentPromotion(null);
+      return;
+    }
+
+    const subtotal = cart.reduce((sum, item) => {
+      const itemSubtotal = Number(item.subtotal) || 0;
+      return sum + itemSubtotal;
+    }, 0);
+    
+    const { discount, promotion, breakdown } = calculateCartDiscount(cart, selectedCustomer, promotions, products);
+    const total = Math.max(0.01, subtotal - discount);
+    
+    setCurrentSubtotal(subtotal);
+    setCurrentDiscount(discount);
+    setCurrentTotal(total);
+    setCurrentBreakdown(breakdown);
+    setCurrentPromotion(promotion);
+  }, [cart, selectedCustomer, promotions, products]);
+
+  // Effect para notificaciones de stock bajo
+  useEffect(() => {
+    const checkLowStock = () => {
+      const lowStockProducts = products.filter(p => p.stock <= p.minStock && p.stock > 0);
+      const outOfStockProducts = products.filter(p => p.stock === 0);
+      
+      if (lowStockProducts.length > 0 || outOfStockProducts.length > 0) {
+        const newNotifications: {
+          type: 'success' | 'error' | 'warning' | 'info';
+          message: string;
+          timestamp: Date;
+        }[] = [];
+        
+        if (outOfStockProducts.length > 0) {
+          newNotifications.push({
+            type: 'error' as const,
+            message: `${outOfStockProducts.length} producto(s) sin stock`,
+            timestamp: new Date()
+          });
+        }
+        
+        if (lowStockProducts.length > 0) {
+          newNotifications.push({
+            type: 'warning' as const,
+            message: `${lowStockProducts.length} producto(s) con stock bajo`,
+            timestamp: new Date()
+          });
+        }
+        
+        setNotifications(prev => [...newNotifications, ...prev.slice(0, 4)]);
+      }
+    };
+
+    if (products.length > 0) {
+      checkLowStock();
+    }
+  }, [products]);
+
+  // Effect para sincronizar datos cuando cambia la pestaña activa
+  useEffect(() => {
+    const syncDataForTab = async () => {
+      switch (activeTab) {
+        case "products":
+          if (products.length === 0) {
+            await productsHook.loadProducts();
+          }
+          break;
+        case "sales":
+          if (sales.length === 0) {
+            await loadSalesFromDB(productsHook.products);
+          }
+          break;
+        case "suppliers":
+          if (suppliers.length === 0) {
+            await loadSuppliersHook();
+          }
+          break;
+        case "inventory":
+          if (inventoryMovements.length === 0) {
+            await loadInventoryMovementsHook();
+          }
+          break;
+      }
+    };
+
+    syncDataForTab();
+  }, [activeTab]);
+
+  // ===========================================================================
+  // SECCIÓN 6.4: FUNCIONES DELEGADAS A LOS HOOKS
+  // ===========================================================================
+
+  // ==================== FUNCIONES DE PRODUCTOS ====================
+  const addProduct = async () => {
+    if (!newProduct.name || newProduct.price <= 0 || !newProduct.description) {
+      setErrors(prev => ({ 
+        ...prev, 
+        addProduct: 'Por favor completa: Nombre, Precio (mayor a 0) y Descripción' 
+      }));
+      return;
+    }
+
+    if (!selectedCategoryId) {
+      setErrors(prev => ({ 
+        ...prev, 
+        addProduct: 'Debes seleccionar una categoría' 
+      }));
+      return;
+    }
+
+    try {
+      const productData = {
+        name: newProduct.name,
+        description: newProduct.description,
+        barcode: newProduct.barcode,
+        price: newProduct.price,
+        cost: newProduct.cost,
+        stock: newProduct.stock,
+        minStock: newProduct.minStock,
+        wholesalePrice: newProduct.wholesalePrice,
+        observations: newProduct.observations
+      };
+
+      await addProductHook(productData);
+
+      // Limpiar formulario
+      setNewProduct({
+        name: "",
+        sku: "",
+        barcode: "",
+        price: 0,
+        cost: 0,
+        stock: 0,
+        minStock: 1,
+        category: "",
+        description: "Producto sin descripción",
+        observations: "",
+        wholesalePrice: 0,
+      });
+
+      setNotifications(prev => [{
+        type: 'success',
+        message: `Producto "${newProduct.name}" agregado correctamente`,
+        timestamp: new Date()
+      }, ...prev]);
+
+      // Cerrar diálogo
+      const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
+      if (closeButton) closeButton.click();
+
+    } catch (error: any) {
+      console.error('❌ Error agregando producto:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        addProduct: 'Error al agregar el producto: ' + error.message 
+      }));
+    }
+  };
+
+  const editProduct = async (updatedProduct: Product) => {
+    try {
+      await updateProductHook(updatedProduct);
+      
+      setIsEditDialogOpen(false);
+      setEditingProduct(null);
+      
+      setNotifications(prev => [{
+        type: 'success',
+        message: `Producto "${updatedProduct.name}" actualizado correctamente`,
+        timestamp: new Date()
+      }, ...prev]);
+
+    } catch (error: any) {
+      console.error('❌ Error actualizando producto:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        editProduct: 'Error al actualizar el producto: ' + error.message 
+      }));
+    }
+  };
+
+  const deleteProduct = async (productId: number) => {
+    try {
+      await deleteProductHook(productId);
+      
+      setNotifications(prev => [{
+        type: 'success',
+        message: 'Producto eliminado correctamente',
+        timestamp: new Date()
+      }, ...prev]);
+      
+    } catch (error: any) {
+      console.error('❌ Error eliminando producto:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        deleteProduct: 'Error al eliminar el producto: ' + error.message 
+      }));
+    }
+  };
+
+  const updateStock = async (productId: number, newStock: number, reason = "Ajuste manual") => {
+    try {
+      await updateStockHook(productId, newStock, reason);
+      
+      // Registrar movimiento de inventario
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        await addInventoryMovementHook({
+          productId,
+          productName: product.name,
+          type: newStock > product.stock ? "entrada" : "salida",
+          quantity: Math.abs(newStock - product.stock),
+          previousStock: product.stock,
+          newStock,
+          reason,
+          productCost: product.cost,
+          productPrice: product.price
+        });
+      }
+
+    } catch (error: any) {
+      console.error('❌ Error actualizando stock:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        updateStock: 'Error al actualizar stock: ' + error.message 
+      }));
+    }
+  };
+
+  // ==================== FUNCIONES DE VENTAS ====================
+  const addToCart = (product: Product) => {
+    addToCartHook(product, isWholesaleSale, selectedCustomer, cart, setCart);
+  };
+
+  const removeFromCart = (productId: number) => {
+    removeFromCartHook(productId, cart, setCart);
+    
+    const item = cart.find(item => item.productId === productId);
+    if (item) {
+      setNotifications(prev => [{
+        type: 'info',
+        message: `${item.productName} removido del carrito`,
+        timestamp: new Date()
+      }, ...prev]);
+    }
+  };
+
+  const updateCartQuantity = (productId: number, quantity: number) => {
+    updateCartQuantityHook(productId, quantity, cart, setCart, products, isWholesaleSale, selectedCustomer);
+  };
+
+  const completeSale = async () => {
+    if (cart.length === 0) {
+      setErrors(prev => ({ ...prev, completeSale: 'El carrito está vacío' }));
+      return;
+    }
+
+    try {
+      const saleData = {
+        cart,
+        selectedCustomer,
+        currentSubtotal,
+        currentDiscount,
+        currentTotal,
+        currentPromotion,
+        paymentMethod,
+        isWholesaleSale,
+        isInternalPurchase,
+        products,
+        updateStockInDatabase: async (productId: number, newStock: number) => {
+          const product = products.find(p => p.id === productId);
+          if (product) {
+            await updateStockHook(productId, newStock, `Venta`);
+          }
+        },
+        addInventoryMovement: addInventoryMovementHook
+      };
+
+      await completeSaleHook(saleData);
+
+      // Limpiar estados de UI después de la venta
       setCart([]);
       setSelectedCustomer(null);
       setCurrentSubtotal(0);
@@ -1212,119 +2332,109 @@ export default function BusinessSalesSystem() {
       setCurrentTotal(0);
       setCurrentBreakdown([]);
       setCurrentPromotion(null);
-      setIsWholesaleSale(false); 
+      setIsWholesaleSale(false);
       setIsInternalPurchase(false);
       
-      console.log('🎉 Venta completada y datos persistidos');
-      alert('✅ Venta completada exitosamente!');
+      setNotifications(prev => [{
+        type: 'success',
+        message: `✅ Venta completada exitosamente! Total: ${formatCurrency(currentTotal)}`,
+        timestamp: new Date()
+      }, ...prev]);
 
     } catch (error: any) {
       console.error('❌ Error completando venta:', error);
-      alert('Error al procesar la venta: ' + error.message);
+      setErrors(prev => ({ 
+        ...prev, 
+        completeSale: 'Error al procesar la venta: ' + error.message 
+      }));
     }
   };
 
-//------------------------------------------------------- FUNCIONES ---------------------------------------------------------------------
-  
-  const [cart, setCart] = useState<SaleItem[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [productSearchTerm, setProductSearchTerm] = useState("")
-  const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>([])
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
-  const [isEditSupplierDialogOpen, setIsEditSupplierDialogOpen] = useState(false)
+  // ==================== FUNCIONES DE PROVEEDORES ====================
+  const addSupplier = async () => {
+    if (newSupplier.empresa && newSupplier.contacto) {
+      try {
+        await addSupplierHook(newSupplier);
+        
+        setNewSupplier({ 
+          empresa: "", 
+          contacto: "", 
+          email: "", 
+          telefono: "", 
+          direccion: "", 
+          productos_que_surte: "",
+          ciudad: "",
+          rut: "",
+          condiciones_pago: "",
+          tiempo_entrega: "",
+        });
 
-//------------------------------------------------------- ESTADO CLIENTES/PROMOCIONES/ESTADO CARRO/ ---------------------------------------------------------------------
+        setNotifications(prev => [{
+          type: 'success',
+          message: `Proveedor "${newSupplier.empresa}" agregado correctamente`,
+          timestamp: new Date()
+        }, ...prev]);
 
-  // Estados para clientes
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [customerSearchTerm, setCustomerSearchTerm] = useState("")
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
-
-  // Estados para promociones
-  const [promotions, setPromotions] = useState<Promotion[]>([])
-
-  // Estados para el carrito mejorado
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer" | "card">("cash")
-
-  const [newPromotion, setNewPromotion] = useState({
-  name: "",
-  description: "",
-  discountType: "percentage" as "percentage" | "fixed" | "bundle",
-  discountValue: 0,
-  bundleBuy: 0,
-  bundlePay: 0,
-  appliesTo: "all" as "all" | "specific" | "category",
-  specificProducts: [] as number[],
-  specificCategories: [] as string[],
-  minPurchase: 0,
-  forFrequentOnly: false,
-  isActive: true,
-  startDate: new Date().toISOString().split("T")[0],
-  endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-})
-
-//------------------------------------------------------ FUNCION PARA CALCULAR DESCUENTOS POR PRODUCTO ----------------------------------------------------------------
-
-  const calculateProductDiscount = (
-    productId: number,
-    productPrice: number,
-    quantity: number,
-    customer: Customer | null,
-  ): { discount: number; promotion: Promotion | null } => {
-    const product = products.find((p) => p.id === productId)
-    if (!product) return { discount: 0, promotion: null }
-
-    const today = new Date().toISOString().split("T")[0]
-    let bestDiscount = 0
-    let bestPromotion: Promotion | null = null
-
-    promotions.forEach((promo) => {
-      if (
-        !promo.isActive ||
-        promo.startDate > today ||
-        promo.endDate < today ||
-        (promo.forFrequentOnly && (!customer || !customer.isFrequent))
-      ) {
-        return
+        const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
+        if (closeButton) closeButton.click();
+        
+      } catch (error: any) {
+        console.error('❌ Error agregando proveedor:', error);
+        setErrors(prev => ({ 
+          ...prev, 
+          addSupplier: 'Error al crear el proveedor: ' + error.message 
+        }));
       }
+    } else {
+      setErrors(prev => ({ 
+        ...prev, 
+        addSupplier: 'Por favor completa al menos los campos de Empresa y Contacto' 
+      }));
+    }
+  };
 
-      let applies = false
-      if (promo.appliesTo === "all") {
-        applies = true
-      } else if (promo.appliesTo === "specific" && promo.specificProducts.includes(productId)) {
-        applies = true
-      } else if (promo.appliesTo === "category" && promo.specificCategories.includes(product.category)) {
-        applies = true
-      }
+  const updateSupplier = async (updatedSupplier: Supplier) => {
+    try {
+      await updateSupplierHook(updatedSupplier.id_proveedor, updatedSupplier);
+      
+      setIsEditSupplierDialogOpen(false);
+      setEditingSupplier(null);
+      
+      setNotifications(prev => [{
+        type: 'success',
+        message: `Proveedor "${updatedSupplier.empresa}" actualizado correctamente`,
+        timestamp: new Date()
+      }, ...prev]);
 
-      if (!applies) return
+    } catch (error: any) {
+      console.error('❌ Error actualizando proveedor:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        updateSupplier: 'Error al actualizar el proveedor: ' + error.message 
+      }));
+    }
+  };
 
-      let discount = 0
-      if (promo.discountType === "percentage") {
-        discount = (productPrice * quantity * promo.discountValue) / 100
-      } else if (promo.discountType === "fixed") {
-        discount = Math.min(promo.discountValue, productPrice * quantity)
-      } else if (promo.discountType === "bundle") {
-        if (quantity >= promo.bundleBuy) {
-          const sets = Math.floor(quantity / promo.bundleBuy)
-          const itemsToDiscount = sets * (promo.bundleBuy - promo.bundlePay)
-          discount = itemsToDiscount * productPrice
-        }
-      }
+  const deleteSupplier = async (supplierId: number) => {
+    try {
+      await deleteSupplierHook(supplierId);
+      
+      setNotifications(prev => [{
+        type: 'success',
+        message: 'Proveedor eliminado correctamente',
+        timestamp: new Date()
+      }, ...prev]);
 
-      if (discount > bestDiscount) {
-        bestDiscount = discount
-        bestPromotion = promo
-      }
-    })
+    } catch (error: any) {
+      console.error('❌ Error eliminando proveedor:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        deleteSupplier: 'Error al eliminar el proveedor: ' + error.message 
+      }));
+    }
+  };
 
-    return { discount: bestDiscount, promotion: bestPromotion }
-  }
-
-//----------------------------------------------------------- FUNCION PARA GESTION DE CLIENTES ----------------------------------------------------------------------------
-
+  // ==================== FUNCIONES DE CLIENTES Y PROMOCIONES ====================
   const addCustomer = () => {
     if (newCustomer.name && newCustomer.email) {
       const customer: Customer = {
@@ -1335,8 +2445,9 @@ export default function BusinessSalesSystem() {
         totalSpent: 0,
         registrationDate: new Date().toISOString(),
         lastPurchaseDate: "",
-      }
-      setCustomers([...customers, customer])
+      };
+      setCustomers([...customers, customer]);
+      
       setNewCustomer({
         name: "",
         email: "",
@@ -1344,39 +2455,53 @@ export default function BusinessSalesSystem() {
         address: "",
         notes: "",
         isWholesale: false,
-      })
-      const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement
-      if (closeButton) closeButton.click()
+      });
+
+      setNotifications(prev => [{
+        type: 'success',
+        message: `Cliente "${newCustomer.name}" agregado correctamente`,
+        timestamp: new Date()
+      }, ...prev]);
+
+      const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
+      if (closeButton) closeButton.click();
     }
-  }
+  };
 
   const deleteCustomer = (customerId: number) => {
-    setCustomers(customers.filter((c) => c.id !== customerId))
-  }
-
-//------------------------------------------------------ FUNCION PARA GESTION DE PROMOCIONES ---------------------------------------------------------------------------------
+    setCustomers(customers.filter((c) => c.id !== customerId));
+    
+    setNotifications(prev => [{
+      type: 'info',
+      message: 'Cliente eliminado correctamente',
+      timestamp: new Date()
+    }, ...prev]);
+  };
 
   const addPromotion = () => {
     if (newPromotion.name) {
       if (newPromotion.discountType === "bundle") {
-        if (
-          newPromotion.bundleBuy <= 0 ||
-          newPromotion.bundlePay <= 0 ||
-          newPromotion.bundleBuy <= newPromotion.bundlePay
-        ) {
-          alert("Para ofertas X por Y, debes especificar cantidades válidas (ejemplo: compra 3, paga 2)")
-          return
+        if (newPromotion.bundleBuy <= 0 || newPromotion.bundlePay <= 0 || newPromotion.bundleBuy <= newPromotion.bundlePay) {
+          setErrors(prev => ({ 
+            ...prev, 
+            addPromotion: "Para ofertas X por Y, debes especificar cantidades válidas (ejemplo: compra 3, paga 2)" 
+          }));
+          return;
         }
       } else if (newPromotion.discountValue <= 0) {
-        alert("Debes especificar un valor de descuento")
-        return
+        setErrors(prev => ({ 
+          ...prev, 
+          addPromotion: "Debes especificar un valor de descuento válido" 
+        }));
+        return;
       }
 
       const promotion: Promotion = {
         id: Date.now(),
         ...newPromotion,
-      }
-      setPromotions([...promotions, promotion])
+      };
+      setPromotions([...promotions, promotion]);
+      
       setNewPromotion({
         name: "",
         description: "",
@@ -1392,842 +2517,141 @@ export default function BusinessSalesSystem() {
         isActive: true,
         startDate: new Date().toISOString().split("T")[0],
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      })
-      const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement
-      if (closeButton) closeButton.click()
-    }
-  }
-
-  const togglePromotionStatus = (promotionId: number) => {
-    setPromotions(promotions.map((p) => (p.id === promotionId ? { ...p, isActive: !p.isActive } : p)))
-  }
-
-  const deletePromotion = (promotionId: number) => {
-    setPromotions(promotions.filter((p) => p.id !== promotionId))
-  }
-
-//------------------------------------------------------------- FUNCION PARA CANCELAR VENTA ------------------------------------------------------------------------------
-
-  const cancelSale = (saleId: number) => {
-    const sale = sales.find((s) => s.id === saleId)
-    if (!sale || sale.status === "cancelled") return
-
-    // Restaurar stock
-    sale.items.forEach((item) => {
-      const product = products.find((p) => p.id === item.productId)
-      if (product) {
-        updateStock(product.id, product.stock + item.quantity, `Anulación de venta ${sale.saleNumber}`)
-      }
-    })
-
-    // Actualizar estado de la venta
-    setSales(sales.map((s) => (s.id === saleId ? { ...s, status: "cancelled" } : s)))
-
-    // Actualizar cliente si existe
-    if (sale.customerId) {
-      setCustomers(
-        customers.map((c) => {
-          if (c.id === sale.customerId) {
-            return {
-              ...c,
-              totalPurchases: Math.max(0, c.totalPurchases - 1),
-              totalSpent: Math.max(0, c.totalSpent - sale.total),
-              isFrequent: c.totalPurchases - 1 >= 5,
-            }
-          }
-          return c
-        }),
-      )
-    }
-  }
-
-//------------------------------------------------------ FUNCION PARA CALCULAR DESCUENTOS DEL CARRITO ----------------------------------------------------------------
-
-  const calculateCartDiscount = (cartItems: SaleItem[], customer: Customer | null) => {
-    let totalDiscount = 0
-    const discountBreakdown: DiscountBreakdown[] = []
-    let appliedPromotion: Promotion | null = null
-
-    cartItems.forEach((item) => {
-      const { discount, promotion } = calculateProductDiscount(item.productId, item.price, item.quantity, customer)
-      if (discount > 0 && promotion) {
-        totalDiscount += discount
-        discountBreakdown.push({
-          productId: item.productId,
-          productName: item.productName,
-          promotionName: promotion.name,
-          discountAmount: discount,
-        })
-        if (!appliedPromotion) appliedPromotion = promotion
-      }
-    })
-
-    const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0)
-    if (appliedPromotion && subtotal < (appliedPromotion as Promotion).minPurchase) {
-      return { discount: 0, promotion: null, breakdown: [] }
-    }
-
-    return { discount: totalDiscount, promotion: appliedPromotion, breakdown: discountBreakdown }
-  }
-
-  // Efecto para calcular descuentos automáticamente cuando cambia el carrito
-  useEffect(() => {
-    if (cart.length === 0) {
-      setCurrentSubtotal(0)
-      setCurrentDiscount(0)
-      setCurrentTotal(0)
-      setCurrentBreakdown([])
-      setCurrentPromotion(null)
-      return
-    }
-
-    const subtotal = cart.reduce((sum, item) => {
-      const itemSubtotal = Number(item.subtotal) || 0; // ← CONVERTIR A NÚMERO
-      return sum + itemSubtotal;
-    }, 0);
-    const { discount, promotion, breakdown } = calculateCartDiscount(cart, selectedCustomer)
-    const total = Math.max(0.01, subtotal - discount);
-    
-    setCurrentSubtotal(subtotal)
-    setCurrentDiscount(discount)
-    setCurrentTotal(total)
-    setCurrentBreakdown(breakdown)
-    setCurrentPromotion(promotion)
-  }, [cart, selectedCustomer])
-
-  useEffect(() => {
-    if (cart.length > 0) {
-      console.log('🛒 Estado actual del carrito:', cart.map(item => ({
-        product: item.productName,
-        quantity: item.quantity,
-        price: item.price,
-        subtotal: item.subtotal,
-        discount: item.discount
-      })));
-      
-      // También mostrar los totales calculados
-      console.log('💰 Totales calculados:', {
-        currentSubtotal,
-        currentDiscount, 
-        currentTotal
-      });
-    }
-  }, [cart, currentSubtotal, currentDiscount, currentTotal]);
-
-//----------------------------------------------------------------- FUNCION PARA BUSQUEDA ---------------------------------------------------------------------------------
-
-  const searchCustomers = (term: string) => {
-    if (!term) return customers
-
-    const searchLower = term.toLowerCase()
-    return customers.filter(
-      (c) =>
-        c.name.toLowerCase().includes(searchLower) ||
-        c.email.toLowerCase().includes(searchLower) ||
-        c.phone.includes(term),
-    )
-  }
-
-//----------------------------------------------------------------- FUNCIONES DE EXPORTACION ---------------------------------------------------------------------------------
-
-  const exportCustomersToExcel = () => {
-    const data = customers.map((customer) => ({
-      Nombre: customer.name,
-      Email: customer.email,
-      Teléfono: customer.phone,
-      Tipo: customer.isWholesale ? "Mayorista" : "Minorista",
-      Estado: customer.isFrequent ? "VIP ⭐" : "Regular",
-      "Total Compras": customer.totalPurchases,
-      "Total Gastado": `$${customer.totalSpent.toFixed(2)}`,
-      "Ticket Promedio":
-        customer.totalPurchases > 0 ? `$${(customer.totalSpent / customer.totalPurchases).toFixed(2)}` : "$0.00",
-      "Última Compra": customer.lastPurchaseDate
-        ? new Date(customer.lastPurchaseDate).toLocaleDateString()
-        : "Sin compras",
-      Notas: customer.notes,
-    }))
-
-    exportToExcel(data, "clientes", "Base de Clientes")
-  }
-
-  const exportPromotionsToExcel = () => {
-    const data = promotions.map((promo) => {
-      const uses = sales.filter((s) => s.promotionId === promo.id).length
-      const totalDiscounted = sales.filter((s) => s.promotionId === promo.id).reduce((sum, s) => sum + s.discount, 0)
-
-      let appliesTo = ""
-      if (promo.appliesTo === "all") {
-        appliesTo = "Todos los productos"
-      } else if (promo.appliesTo === "specific") {
-        const productNames = promo.specificProducts
-          .map((id) => products.find((p) => p.id === id)?.name)
-          .filter(Boolean)
-          .join(", ")
-        appliesTo = `Productos: ${productNames}`
-      } else if (promo.appliesTo === "category") {
-        appliesTo = `Categorías: ${promo.specificCategories.join(", ")}`
-      }
-
-      let discountDescription = ""
-      if (promo.discountType === "percentage") {
-        discountDescription = `${promo.discountValue}% de descuento`
-      } else if (promo.discountType === "fixed") {
-        discountDescription = `$${promo.discountValue} de descuento`
-      } else if (promo.discountType === "bundle") {
-        discountDescription = `${promo.bundleBuy}x${promo.bundlePay}`
-      }
-      return {
-        Promoción: promo.name,
-        Descripción: promo.description,
-        "Aplica a": appliesTo,
-        Tipo:
-          promo.discountType === "percentage"
-            ? "Porcentaje"
-            : promo.discountType === "fixed"
-              ? "Monto Fijo"
-              : "X por Y",
-        Descuento: discountDescription,
-        "Compra Mínima": `$${promo.minPurchase.toFixed(2)}`,
-        "Solo VIP": promo.forFrequentOnly ? "Sí" : "No",
-        Estado: promo.isActive ? "Activa ✓" : "Inactiva ✗",
-        Usos: uses,
-        "Total Descontado": `$${totalDiscounted.toFixed(2)}`,
-        Vigencia: `${promo.startDate} - ${promo.endDate}`,
-      }
-    })
-    exportToExcel(data, "promociones", "Promociones")
-  }
-
-  const exportPaymentMethodsReport = () => {
-    const cashSales = sales.filter((s) => s.paymentMethod === "cash" && s.status === "completed")
-    const transferSales = sales.filter((s) => s.paymentMethod === "transfer" && s.status === "completed")
-    const cardSales = sales.filter((s) => s.paymentMethod === "card" && s.status === "completed")
-    const data = [
-      {
-        "Método de Pago": "Efectivo",
-        "Cantidad de Ventas": cashSales.length,
-        "Total Recaudado": `$${cashSales.reduce((sum, s) => sum + s.total, 0).toFixed(2)}`,
-      },
-      {
-        "Método de Pago": "Transferencia",
-        "Cantidad de Ventas": transferSales.length,
-        "Total Recaudado": `$${transferSales.reduce((sum, s) => sum + s.total, 0).toFixed(2)}`,
-      },
-      {
-        "Método de Pago": "Tarjeta",
-        "Cantidad de Ventas": cardSales.length,
-        "Total Recaudado": `$${cardSales.reduce((sum, s) => sum + s.total, 0).toFixed(2)}`,
-      },
-      {
-        "Método de Pago": "TOTAL",
-        "Cantidad de Ventas": cashSales.length + transferSales.length + cardSales.length,
-        "Total Recaudado": `$${sales
-          .filter((s) => s.status === "completed")
-          .reduce((sum, s) => sum + s.total, 0)
-          .toFixed(2)}`,
-      },
-    ]
-    exportToExcel(data, "ventas-metodo-pago", "Ventas por Método de Pago")
-  }
-
-  const exportCategoryReport = () => {
-    const uniqueCategories = Array.from(new Set(products.map((p) => p.category)))
-    const categoryData = uniqueCategories.map((category) => {
-      const categoryProducts = products.filter((p) => p.category === category)
-      const categoryStock = categoryProducts.reduce((sum, p) => sum + p.stock, 0)
-      const categoryValue = categoryProducts.reduce((sum, p) => sum + p.stock * p.price, 0)
-      return {
-        Categoría: category,
-        "Total Productos": categoryProducts.length,
-        "Stock Total": categoryStock,
-        "Valor Total": `$${categoryValue.toFixed(2)}`,
-      }
-    })
-    exportToExcel(categoryData, "stock-por-categoria", "Stock por Categoría")
-  }
-
-  const exportExpiringProducts = () => {
-    const today = new Date()
-    const threeMonthsFromNow = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000)
-
-    const expiringProducts = products
-      .filter((p) => {
-        if (!p.expiryDate) return false
-        const expiryDate = new Date(p.expiryDate)
-        return expiryDate <= threeMonthsFromNow
-      })
-      .map((p) => ({
-        Producto: p.name,
-        SKU: p.sku,
-        Categoría: p.category,
-        Stock: p.stock,
-        "Fecha de Vencimiento": p.expiryDate,
-        "Días para Vencer": Math.ceil((new Date(p.expiryDate!).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
-        Estado:
-          new Date(p.expiryDate!) < today
-            ? "VENCIDO"
-            : new Date(p.expiryDate!).getTime() - today.getTime() < 30 * 24 * 60 * 60 * 1000
-              ? "CRÍTICO"
-              : "PRÓXIMO A VENCER",
-      }))
-
-    exportToExcel(expiringProducts, "productos-proximos-vencer", "Productos Próximos a Vencer")
-  }
-
-  const exportObsoleteProducts = () => {
-    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
-
-    const obsoleteProducts = products
-      .filter((p) => {
-        if (!p.lastSoldDate) return p.stock > 0
-        return new Date(p.lastSoldDate) < sixtyDaysAgo && p.stock > 0
-      })
-      .map((p) => ({
-        Producto: p.name,
-        SKU: p.sku,
-        Categoría: p.category,
-        Stock: p.stock,
-        "Última Venta": p.lastSoldDate ? new Date(p.lastSoldDate).toLocaleDateString() : "Nunca",
-        "Días sin Vender": p.lastSoldDate
-          ? Math.ceil((Date.now() - new Date(p.lastSoldDate).getTime()) / (1000 * 60 * 60 * 24))
-          : "N/A",
-        "Valor en Stock": `$${(p.stock * p.price).toFixed(2)}`,
-      }))
-
-    exportToExcel(obsoleteProducts, "productos-obsoletos", "Productos Obsoletos")
-  }
-
-  const exportProfitableProducts = () => {
-    const productSales = products.map((product) => {
-      const totalSold = sales
-        .filter((s) => s.status === "completed")
-        .reduce((sum, sale) => {
-          const item = sale.items.find((item) => item.productId === product.id)
-          return sum + (item ? item.quantity : 0)
-        }, 0)
-
-      const totalRevenue = sales
-        .filter((s) => s.status === "completed")
-        .reduce((sum, sale) => {
-          const item = sale.items.find((item) => item.productId === product.id)
-          return sum + (item ? item.subtotal : 0)
-        }, 0)
-
-      const totalProfit = totalSold * (product.price - product.cost)
-
-      return {
-        Producto: product.name,
-        SKU: product.sku,
-        Categoría: product.category,
-        "Unidades Vendidas": totalSold,
-        "Ingresos Totales": `$${totalRevenue.toFixed(2)}`,
-        "Ganancia Total": `$${totalProfit.toFixed(2)}`,
-        "Ganancia por Unidad": `$${(product.price - product.cost).toFixed(2)}`,
-        "Margen %": product.cost > 0 ? `${(((product.price - product.cost) / product.cost) * 100).toFixed(1)}%` : "0%",
-      }
-    })
-
-    const sortedByProfit = productSales.sort((a, b) => {
-      const profitA = Number.parseFloat(a["Ganancia Total"].replace("$", ""))
-      const profitB = Number.parseFloat(b["Ganancia Total"].replace("$", ""))
-      return profitB - profitA
-    })
-
-    exportToExcel(sortedByProfit, "productos-rentables", "Productos Más Rentables")
-  }
-
-//----------------------------------------------------------------- ESTADOS PARA BACKUP Y RECUPERACIÓN ---------------------------------------------------------------------
-
-  const [salesBackup, setSalesBackup] = useState<Sale[]>([])
-  const [inventoryMovementsBackup, setInventoryMovementsBackup] = useState<InventoryMovement[]>([])
-  const [showRecoverySales, setShowRecoverySales] = useState(false)
-  const [showRecoveryInventory, setShowRecoveryInventory] = useState(false)
-
-  //----------------------------------------------------------------- FORMULARIOS ---------------------------------------------------------------------
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    sku: "",
-    barcode: "",
-    price: 0,
-    cost: 0,
-    stock: 0,
-    minStock: 1,
-    category: "",
-    description: "Producto sin descripción",
-    observations: "",
-    wholesalePrice: 0,
-  })
-
-  const [newSupplier, setNewSupplier] = useState({
-    empresa: "",           
-    contacto: "",          
-    email: "",
-    telefono: "",           
-    direccion: "",         
-    productos_que_surte: "",
-    ciudad: "",
-    rfc: "",
-    condiciones_pago: "",
-    tiempo_entrega: "",
-  });
-
-  // Formularios nuevos
-  const [newCustomer, setNewCustomer] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    notes: "",
-    isWholesale: false,
-  })
-
-//------------------------------------------------------- FUNCIONES DE RESET Y RECUPERACIÓN ---------------------------------------------------------------------------
-
-  const resetSalesHistory = () => {
-    setSalesBackup([...sales])
-    setSales([])
-    setShowRecoverySales(true)
-    setTimeout(() => setShowRecoverySales(false), 10000) // Mostrar por 10 segundos
-  }
-
-  const resetInventoryMovements = () => {
-    setInventoryMovementsBackup([...inventoryMovements])
-    setInventoryMovements([])
-    setShowRecoveryInventory(true)
-    setTimeout(() => setShowRecoveryInventory(false), 10000) // Mostrar por 10 segundos
-  }
-
-  const recoverSalesHistory = () => {
-    setSales([...salesBackup])
-    setSalesBackup([])
-    setShowRecoverySales(false)
-  }
-
-  const recoverInventoryMovements = () => {
-    setInventoryMovements([...inventoryMovementsBackup])
-    setInventoryMovementsBackup([])
-    setShowRecoveryInventory(false)
-  }
-
-//------------------------------------------------------------------------------------ FUNCION PARA AÑADIR PRODUCTO --------------------------------------------------------------------------------------------
-
-  const addProduct = async () => {
-    // Validación mejorada
-    if (!newProduct.name || newProduct.price <= 0 || !newProduct.description) {
-      alert('Por favor completa: Nombre, Precio (mayor a 0) y Descripción');
-      return;
-    }
-
-    try {
-      console.log('🔄 Agregando nuevo producto...', newProduct);
-
-      // 1. GENERAR SKU AUTOMÁTICO
-      const ultimoSKU = products.reduce((max, product) => {
-        const skuNum = parseInt(product.sku.replace('SKU-', ''));
-        return isNaN(skuNum) ? max : Math.max(max, skuNum);
-      }, 0);
-      
-      const nuevoSKUNumero = ultimoSKU + 1;
-      const skuGenerado = `SKU-${nuevoSKUNumero.toString().padStart(3, '0')}`;
-      
-      console.log('🔢 SKU generado:', skuGenerado);
-
-      // 2. PREPARAR DATOS PARA LA BD
-      const productData = {
-        nombre: newProduct.name,
-        descripcion: newProduct.description,
-        sku: skuGenerado,
-        barcode: newProduct.barcode || "",
-        precio: newProduct.price,
-        costo: newProduct.cost || 0,
-        stock: newProduct.stock || 0,
-        min_stock: newProduct.minStock || 1,
-        id_categoria: selectedCategoryId,
-      };
-
-      console.log('🔍 Categoría seleccionada:', selectedCategoryId);
-      console.log('📤 Enviando producto a BD:', productData);
-
-      // 3. GUARDAR EN LA BD PRIMERO
-      const productoCreado = await api.createProducto(productData);
-      console.log('✅ Producto creado en BD:', productoCreado);
-
-      // 4. OBTENER EL NOMBRE DE LA CATEGORÍA
-      const categoriaNombre = categories.find(cat => cat.id_categoria === selectedCategoryId)?.nombre || "General";
-
-      // 5. CREAR OBJETO PARA EL ESTADO LOCAL
-      const product: Product = {
-        id: productoCreado.id_producto,
-        name: newProduct.name,
-        sku: skuGenerado,
-        barcode: newProduct.barcode,
-        price: newProduct.price,
-        cost: newProduct.cost,
-        stock: newProduct.stock,
-        minStock: newProduct.minStock,
-        category: categoriaNombre,
-        categoryId: selectedCategoryId,
-        description: newProduct.description,
-        wholesalePrice: newProduct.wholesalePrice || newProduct.price * 0.9,
-        expiryDate: undefined,
-        warrantyMonths: undefined,
-        lastSoldDate: undefined,
-        observations: newProduct.observations || ""
-      };
-
-      // 6. ACTUALIZAR ESTADO LOCAL
-      setProducts([...products, product]);
-      
-      console.log('✅ Producto agregado al estado local');
-
-      // 7. LIMPIAR FORMULARIO
-      setNewProduct({
-        name: "",
-        sku: "",
-        barcode: "",
-        price: 0,
-        cost: 0,
-        stock: 0,
-        minStock: 1,
-        category: "",
-        description: "",
-        observations: "",
-        wholesalePrice: 0
       });
 
-      console.log('✅ Producto agregado exitosamente!');
+      setNotifications(prev => [{
+        type: 'success',
+        message: `Promoción "${newPromotion.name}" creada correctamente`,
+        timestamp: new Date()
+      }, ...prev]);
 
-      // 8. CERRAR DIÁLOGO
       const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
       if (closeButton) closeButton.click();
-
-    } catch (error: any) {
-      console.error('❌ Error agregando producto:', error);
-      alert('Error al agregar el producto: ' + error.message);
     }
   };
 
-//----------------------------------------------------------------------------- FUNCION ACTUALIZAR STOCK EN BD ------------------------------------------------------------------------------------------------------
+  const togglePromotionStatus = (promotionId: number) => {
+    setPromotions(promotions.map((p) => (p.id === promotionId ? { ...p, isActive: !p.isActive } : p)));
+  };
 
-  // FUNCIÓN AUXILIAR PARA ACTUALIZAR STOCK EN BD
-  const updateStockInDatabase = async (productId: number, newStock: number) => {
+  const deletePromotion = (promotionId: number) => {
+    setPromotions(promotions.filter((p) => p.id !== promotionId));
+    
+    setNotifications(prev => [{
+      type: 'info',
+      message: 'Promoción eliminada correctamente',
+      timestamp: new Date()
+    }, ...prev]);
+  };
+
+  // ==================== FUNCIONES UTILITARIAS ====================
+  const reloadAllData = async () => {
     try {
-      const product = products.find(p => p.id === productId);
-      if (!product) {
-        console.error('Producto no encontrado:', productId);
-        return;
-      }
+      await Promise.all([
+        productsHook.loadProducts(),
+        loadSalesFromDB(productsHook.products),
+        loadSuppliersHook(),
+        loadInventoryMovementsHook()
+      ]);
 
-      const productData = {
-        nombre: product.name,
-        descripcion: product.description,
-        sku: product.sku,
-        barcode: product.barcode,
-        precio: product.price,
-        costo: product.cost,
-        stock: newStock,
-        min_stock: product.minStock,
-        id_categoria: product.categoryId, 
-      };
+      setNotifications(prev => [{
+        type: 'success',
+        message: 'Datos actualizados correctamente',
+        timestamp: new Date()
+      }, ...prev]);
 
-      console.log('Actualizando stock en BD:', { productId, newStock, productData });
-      
-      await api.updateProduct(productId, productData);
-      
-      // console.log(`✅ Stock actualizado en BD: ${product.name} - ${newStock}`);
     } catch (error) {
-      // console.error(`❌ Error actualizando stock en BD:`, error);
-      throw error;
+      console.error('❌ Error recargando datos:', error);
+      setNotifications(prev => [{
+        type: 'error',
+        message: 'Error al actualizar los datos',
+        timestamp: new Date()
+      }, ...prev]);
     }
   };
 
-  // FUNCIÓN PARA RECARGAR PRODUCTOS
-  const loadProducts = async () => {
-    try {
-      const productosData: ProductoFromAPI[] = await api.getProducts();
-      const adaptedProducts: Product[] = productosData.map(producto => ({
-        id: producto.id_producto,           
-        name: producto.nombre,              
-        sku: producto.sku || `SKU-${producto.id_producto}`,
-        barcode: producto.barcode || "",    
-        price: producto.precio || 0,        
-        cost: producto.costo || 0,            
-        stock: producto.stock,              
-        minStock: producto.min_stock || DEFAULT_MIN_STOCK,
-        category: producto.categoria_nombre, 
-        categoryId: producto.id_categoria, 
-        description: producto.descripcion,  
-        wholesalePrice: producto.precio ? producto.precio * 0.9 : 0,
-      }));
-      setProducts(adaptedProducts);
-    } catch (error) {
-      console.error('Error cargando productos:', error);
-    }
+  const clearError = (errorKey: string) => {
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[errorKey];
+      return newErrors;
+    });
   };
 
-//----------------------------------------------------------------------------- FUNCION PARA ACTUALIZAR STOCK ------------------------------------------------------------------------------------------------------
-
-  const updateStock = (productId: number, newStock: number, reason = "Ajuste manual") => {
-    const product = products.find((p) => p.id === productId)
-    if (product) {
-      const previousStock = product.stock
-      const finalStock = Math.max(0, newStock)
-      
-      // 1. Actualizar estado local inmediatamente (para respuesta rápida)
-      setProducts(products.map((p) => (p.id === productId ? { ...p, stock: finalStock } : p)))
-
-      // 2. Actualizar BD en segundo plano
-      updateStockInDatabase(productId, finalStock).catch(error => {
-        console.error('Error actualizando stock en BD:', error);
-        // Revertir cambio local si falla en BD
-        setProducts(products.map((p) => (p.id === productId ? { ...p, stock: previousStock } : p)));
-        alert('Error al actualizar stock en la base de datos');
-      });
-
-      // 3. Registrar movimiento de inventario
-      if (previousStock !== finalStock) {
-        addInventoryMovement(
-          productId,
-          product.name,
-          finalStock > previousStock ? "entrada" : finalStock < previousStock ? "salida" : "ajuste",
-          Math.abs(finalStock - previousStock),
-          previousStock,
-          finalStock,
-          reason,
-        );
-      }
-    }
-  }
-
-//----------------------------------------------------------------------------- FUNCION DE BORRAR PRODUCTO ------------------------------------------------------------------------------------------------------
-
-  const deleteProduct = async (productId: number) => {
-    try {
-      // console.log('🗑️ Eliminando producto ID:', productId);
-      
-      // VERIFICAR QUE EL ID SEA VÁLIDO
-      if (!productId || isNaN(productId)) {
-        console.error('❌ ID de producto inválido:', productId);
-        alert('Error: ID de producto inválido');
-        return;
-      }
-
-      // VERIFICAR SI EL PRODUCTO EXISTE EN EL ESTADO LOCAL
-      const product = products.find(p => p.id === productId);
-      if (!product) {
-        // console.error('❌ Producto no encontrado en estado local:', productId);
-        // alert('Producto no encontrado');
-        return;
-      }
-      
-      // console.log('🔍 Producto a eliminar:', {
-      //   id: product.id,
-      //   name: product.name,
-      //   sku: product.sku
-      // });
-      
-      // 1. Eliminar de la BD - usar el ID real del backend
-      await api.deleteProducto(productId);
-      
-      // 2. Eliminar del estado local
-      setProducts(products.filter(p => p.id !== productId));
-      
-      // console.log(`✅ Producto ${productId} eliminado exitosamente`);
-      
-    } catch (error: any) {
-      console.error('❌ Error eliminando producto:', error);
-      
-      // Mostrar error específico
-      if (error.message.includes('404')) {
-        alert('Error: El producto no existe en la base de datos');
-      } else {
-        alert('Error al eliminar el producto: ' + error.message);
-      }
-    }
+  const clearAllNotifications = () => {
+    setNotifications([]);
   };
 
-//----------------------------------------------------------------------------- FUNCION DE BORRAR PROVEEDOR ------------------------------------------------------------------------------------------------------
+  // ===========================================================================
+  // SUBSECCIÓN 6.5: FUNCIONES DE EXPORTACIÓN
+  // ===========================================================================
+  
+  const exportProductsToExcel = () => {
+    const data = products.map((product) => ({
+      Nombre: product.name,
+      SKU: product.sku,
+      "Código de Barras": product.barcode,
+      Categoría: product.category,
+      Precio: `$${product.price}`,
+      Costo: `$${product.cost}`,
+      "Ganancia Unitaria": `$${(product.price - product.cost).toFixed(2)}`,
+      "Margen de Ganancia": product.cost > 0 ? `${(((product.price - product.cost) / product.cost) * 100).toFixed(1)}%` : "0.0%",
+      "Stock Actual": product.stock,
+      "Stock Mínimo": product.minStock,
+      Estado: product.stock <= product.minStock ? "CRÍTICO" : product.stock <= product.minStock * 2 ? "BAJO" : "NORMAL",
+      "Valor en Stock": `$${(product.stock * product.price).toFixed(2)}`,
+      "Inversión en Stock": `$${(product.stock * product.cost).toFixed(2)}`,
+      "Ganancia Potencial": `$${(product.stock * (product.price - product.cost)).toFixed(2)}`,
+      Descripción: product.description,
+    }));
 
-  const deleteSupplier = (supplierId: number) => {
-    setSuppliers(suppliers.filter((s) => s.id_proveedor !== supplierId))
-  }
-
-//----------------------------------------------------------------------------- FUNCION DE CARRITO DE COMPRAS ------------------------------------------------------------------------------------------------------
-
-  // Funciones para ventas
-  const addToCart = (product: Product) => {
-    const existingItem = cart.find((item) => item.productId === product.id)
-    const priceToUse = isWholesaleSale ? product.wholesalePrice : product.price
-
-    if (existingItem) {
-      if (existingItem.quantity < product.stock) {
-        setCart(
-          cart.map((item) =>
-            item.productId === product.id
-              ? { 
-                  ...item, 
-                  quantity: item.quantity + 1,
-                  price: priceToUse,
-                  subtotal: Number((item.quantity + 1) * priceToUse),
-                  discount: calculateProductDiscount(product.id, product.price, item.quantity + 1, selectedCustomer).discount
-                }
-              : item,
-          ),
-        )
-      }
-    } else {
-      if (product.stock > 0) {
-        const { discount } = calculateProductDiscount(product.id, product.price, 1, selectedCustomer)
-        setCart([
-          ...cart,
-          {
-            productId: product.id,
-            productName: product.name,
-            quantity: 1,
-            price: priceToUse,
-            subtotal: Number(priceToUse),
-            discount: discount
-          },
-        ])
-      }
-    }
-  }
-
-  const removeFromCart = (productId: number) => {
-    setCart(cart.filter(item => item.productId !== productId));
+    exportToExcel(data, "reporte-productos", "Inventario de Productos");
   };
 
-  const updateCartQuantity = (productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId)
-      return
-    }
+  const exportSalesToExcel = () => {
+    const mainData = sales.flatMap((sale) =>
+      sale.items.map((item) => {
+        const product = products.find((p) => p.id === item.productId);
+        const ganancia = product ? (item.price - product.cost) * item.quantity : 0;
 
-    const product = products.find((p) => p.id === productId)
-    if (product && quantity <= product.stock) {
-      const priceToUse = isWholesaleSale ? product.wholesalePrice : product.price
-      const { discount } = calculateProductDiscount(productId, priceToUse, quantity, selectedCustomer)
+        return {
+          "Número de Venta": sale.saleNumber,
+          Fecha: sale.date,
+          Producto: item.productName,
+          Cantidad: item.quantity,
+          "Precio Unitario": `$${item.price}`,
+          "Costo Unitario": `$${product?.cost || 0}`,
+          Subtotal: `$${item.subtotal.toFixed(2)}`,
+          Ganancia: `$${ganancia.toFixed(2)}`,
+          "Total de la Venta": `$${sale.total.toFixed(2)}`,
+        };
+      }),
+    );
 
-      setCart(
-        cart.map((item) =>
-          item.productId === productId ? { 
-            ...item, 
-            quantity,
-            price: priceToUse,
-            subtotal: Number(quantity * priceToUse),
-            discount: discount
-          } : item,
-        ),
-      )
-    }
-  }
+    exportToExcel(mainData, "reporte-ventas", "Historial de Ventas");
+  };
 
-  // const addInventoryMovement = (
-  //   productId: number,
-  //   productName: string,
-  //   type: "entrada" | "salida" | "ajuste",
-  //   quantity: number,
-  //   previousStock: number,
-  //   newStock: number,
-  //   reason: string,
-  // ) => {
-  //   const product = products.find((p) => p.id === productId)
-  //   if (!product) return
+  const exportSuppliersToExcel = () => {
+    const data = suppliers.map((supplier) => ({
+      Empresa: supplier.empresa,
+      Contacto: supplier.contacto,
+      Email: supplier.email,
+      Teléfono: supplier.telefono,
+      Dirección: supplier.direccion,
+      Ciudad: supplier.ciudad || "",
+      RFC: supplier.rut || "",
+      "Condiciones de Pago": supplier.condiciones_pago || "",
+      "Tiempo de Entrega": supplier.tiempo_entrega || "",
+      "Productos que Surte": supplier.productos_que_surte,
+      Estado: supplier.activo ? "Activo" : "Inactivo"
+    }));
 
-  //   const movement: InventoryMovement = {
-  //     id: movementCounter + 1,
-  //     productId,
-  //     productName,
-  //     type,
-  //     quantity,
-  //     previousStock,
-  //     newStock,
-  //     unitCost: product.cost,
-  //     unitPrice: product.price,
-  //     totalCost: quantity * product.cost,
-  //     totalValue: quantity * product.price,
-  //     reason,
-  //     date: new Date().toLocaleString(),
-  //   }
-  //   setMovementCounter(prev => prev + 1)
-  //   setInventoryMovements((prev) => [movement, ...prev])
-  // }
+    exportToExcel(data, "proveedores", "Lista de Proveedores");
+  };
 
-//------------------------------------------------------------------------------------------ FUNCION PARA EDITAR PRODUCTO ---------------------------------------------------------------------------------------------------
-
-  const editProduct = async (updatedProduct: Product) => {
-    try {
-      // console.log('🔄 === INICIANDO EDICIÓN DE PRODUCTO ===')
-      // console.log('📝 Producto a editar:', updatedProduct)
-
-      // 1. ENCONTRAR LA CATEGORÍA CORRECTA
-      const categoriaEncontrada = categories.find(cat => cat.nombre === updatedProduct.category);
-      const id_categoria = categoriaEncontrada ? categoriaEncontrada.id_categoria : updatedProduct.categoryId;
-
-      // console.log('🔍 Categoría encontrada:', { 
-      //   nombreBuscado: updatedProduct.category, 
-      //   categoriaEncontrada,
-      //   id_categoria 
-      // });
-
-      // 2. PREPARAR DATOS PARA EL BACKEND
-      const productData = {
-        id_producto: updatedProduct.id,
-        nombre: updatedProduct.name,
-        descripcion: updatedProduct.description,
-        sku: updatedProduct.sku,
-        barcode: updatedProduct.barcode,
-        precio: updatedProduct.price,
-        costo: updatedProduct.cost,
-        stock: updatedProduct.stock,
-        min_stock: updatedProduct.minStock,
-        id_categoria: id_categoria,
-      }
-
-      // console.log('📤 === ENVIANDO DATOS AL BACKEND ===')
-      // console.log('🎯 Product ID:', updatedProduct.id)
-      // console.log('📦 Datos a enviar:', JSON.stringify(productData, null, 2))
-      
-      // 3. ACTUALIZAR EN EL BACKEND
-      // console.log('🚀 Llamando a api.updateProduct...')
-      const response = await api.updateProduct(updatedProduct.id, productData)
-      // console.log('✅ Respuesta del backend:', response)
-
-      // 4. ACTUALIZAR ESTADO LOCAL
-      setProducts(products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)))
-
-      // 5. CERRAR DIÁLOGO Y LIMPIAR
-      setIsEditDialogOpen(false)
-      setEditingProduct(null)
-      
-      // console.log('🎉 Producto actualizado completamente')
-      // alert('✅ Producto actualizado correctamente')
-
-    } catch (error: any) {
-      // console.error('❌ === ERROR DETALLADO ===')
-      // console.error('❌ Error actualizando producto:', error)
-      // console.error('❌ Mensaje de error:', error.message)
-      
-      // Verificar si es error de red o de API
-      // if (error.message.includes('404')) {
-      //   console.error('🔍 El endpoint no existe. Verificar:')
-      //   console.error('   - URL del endpoint')
-      //   console.error('   - Método HTTP (debe ser PUT)')
-      //   console.error('   - Si el producto existe en la BD')
-      // }
-      
-      // alert('❌ Error al actualizar el producto. Revisa la consola para más detalles.')
-    }
-  }
-
-//---------------------------------------------------------------------------- FUNCIONES DE EXPORTACIÓN EXCEL MEJORADAS ---------------------------------------------------------------------------------------
-
-  // EXPORTACION DE INVENTARIO A EXCEL
-  // Funciones de exportación Excel
   const exportInventoryToExcel = () => {
-    // 1. Datos principales (tipados correctamente)
     const mainData = inventoryMovements.map((movement) => {
-      const ganancia = movement.type === "salida" ? (movement.unitPrice - movement.unitCost) * movement.quantity : 0
+      const ganancia = movement.type === "salida" ? (movement.unitPrice - movement.unitCost) * movement.quantity : 0;
 
       return {
         "ID Movimiento": movement.id,
@@ -2245,318 +2669,361 @@ export default function BusinessSalesSystem() {
         "Venta Relacionada": movement.venta_numero || "N/A",
         "Proveedor": movement.proveedor_nombre || "N/A",
         Usuario: movement.usuario || "Sistema"
+      };
+    });
+
+    exportToExcel(mainData, "movimientos-inventario", "Movimientos de Inventario");
+  };
+
+    // Agregar estas funciones después de las otras funciones de exportación
+  const exportCustomersToExcel = () => {
+    const data = customers.map((customer) => ({
+      Nombre: customer.name,
+      Email: customer.email,
+      Teléfono: customer.phone,
+      Dirección: customer.address,
+      Tipo: customer.isWholesale ? "Mayorista" : "Minorista",
+      Estado: customer.isFrequent ? "VIP" : "Regular",
+      'Total Compras': customer.totalPurchases,
+      'Total Gastado': `$${customer.totalSpent.toLocaleString()}`,
+      'Ticket Promedio': `$${customer.totalPurchases > 0 ? (customer.totalSpent / customer.totalPurchases).toFixed(2) : "0.00"}`,
+      'Fecha Registro': customer.registrationDate,
+      'Última Compra': customer.lastPurchaseDate || "Sin compras",
+      Notas: customer.notes || ""
+    }));
+
+    exportToExcel(data, "clientes", "Base de Clientes");
+  };
+
+  const exportPromotionsToExcel = () => {
+    const data = promotions.map((promo) => {
+      let aplicaA = "";
+      if (promo.appliesTo === "all") {
+        aplicaA = "Todos los productos";
+      } else if (promo.appliesTo === "specific") {
+        aplicaA = `${promo.specificProducts.length} productos específicos`;
+      } else if (promo.appliesTo === "category") {
+        aplicaA = promo.specificCategories.join(", ");
       }
-    })
 
-    const totalGanancia = inventoryMovements
-      .filter((m) => m.type === "salida")
-      .reduce((sum, m) => sum + (m.unitPrice - m.unitCost) * m.quantity, 0)
+      let descuento = "";
+      if (promo.discountType === "percentage") {
+        descuento = `${promo.discountValue}%`;
+      } else if (promo.discountType === "fixed") {
+        descuento = `$${promo.discountValue}`;
+      } else if (promo.discountType === "bundle") {
+        descuento = `${promo.bundleBuy}x${promo.bundlePay}`;
+      }
 
-    // 2. Fila de totales (con tipos compatibles)
-    const totalData = [{
-      "ID Movimiento": "TOTAL GENERAL",
-      Fecha: "",
-      Producto: "",
-      "Tipo de Movimiento": "",
-      Cantidad: "-",
-      "Stock Anterior": "-",
-      "Stock Nuevo": "-",
-      "Costo Unitario": "",
-      "Precio Unitario": "",
-      "Valor Total": "",
-      Ganancia: `$${totalGanancia.toFixed(2)}`,
-      Motivo: "",
-      "Venta Relacionada": "",
-      "Proveedor": "",
-      Usuario: ""
-    }]
+      return {
+        Nombre: promo.name,
+        Descripción: promo.description,
+        'Tipo Descuento': promo.discountType,
+        Descuento: descuento,
+        'Aplica a': aplicaA,
+        'Compra Mínima': promo.minPurchase > 0 ? `$${promo.minPurchase}` : "Sin mínimo",
+        'Solo VIP': promo.forFrequentOnly ? "Sí" : "No",
+        Estado: promo.isActive ? "Activa" : "Inactiva",
+        'Fecha Inicio': promo.startDate,
+        'Fecha Fin': promo.endDate
+      };
+    });
 
-    // 3. Combinar ambos arrays
-    const allData = [...mainData, ...totalData]
+    exportToExcel(data, "promociones", "Promociones");
+  };
 
-    exportToExcel(allData, "movimientos-inventario", "Movimientos de Inventario")
-  }
+  const exportCategoryReport = () => {
+    const categoryData = products.reduce((acc, product) => {
+      if (!acc[product.category]) {
+        acc[product.category] = {
+          cantidadProductos: 0,
+          stockTotal: 0,
+          valorTotal: 0
+        };
+      }
+      acc[product.category].cantidadProductos++;
+      acc[product.category].stockTotal += product.stock;
+      acc[product.category].valorTotal += product.stock * product.price;
+      
+      return acc;
+    }, {} as Record<string, { cantidadProductos: number; stockTotal: number; valorTotal: number }>);
 
-// EXPORTACION DE PRODUCTOS A EXCEL
-  const exportProductsToExcel = () => {
-    interface ProductExcelRow {
-    Nombre: string;
-    SKU: string;
-    "Código de Barras": string;
-    Categoría: string;
-    Precio: string;
-    Costo: string;
-    "Ganancia Unitaria": string;
-    "Margen de Ganancia": string;
-    "Stock Actual": number | string;
-    "Stock Mínimo": number | string;
-    Estado: string;
-    "Valor en Stock": string;
-    "Inversión en Stock": string;
-    "Ganancia Potencial": string;
-    Descripción: string;
-    Observaciones?: string;
+    const data = Object.entries(categoryData).map(([categoria, info]) => ({
+      Categoría: categoria,
+      'Cantidad de Productos': info.cantidadProductos,
+      'Stock Total': info.stockTotal,
+      'Valor Total': `$${info.valorTotal.toFixed(2)}`
+    }));
+
+    exportToExcel(data, "stock-por-categoria", "Stock por Categoría");
+  };
+
+  const exportExpiringProducts = () => {
+    const today = new Date();
+    
+    type ProductoVencimiento = {
+      Producto: string;
+      SKU: string;
+      Categoría: string;
+      'Fecha Vencimiento': string;
+      'Días Restantes': number;
+      Estado: string;
+      Stock: number;
+      'Valor en Stock': string;
+      Alerta: string;
+    };
+
+    const data: ProductoVencimiento[] = products
+      .filter(product => {
+        if (!product.expiryDate) return false;
+        const expiryDate = new Date(product.expiryDate);
+        return !isNaN(expiryDate.getTime());
+      })
+      .map(product => {
+        const expiryDate = new Date(product.expiryDate!);
+        const diffTime = expiryDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        let estado: string;
+        if (diffDays < 0) {
+          estado = "VENCIDO";
+        } else if (diffDays <= 7) {
+          estado = "CRÍTICO";
+        } else if (diffDays <= 30) {
+          estado = "PRÓXIMO";
+        } else {
+          estado = "VIGENTE";
+        }
+        
+        return {
+          Producto: product.name,
+          SKU: product.sku,
+          Categoría: product.category,
+          'Fecha Vencimiento': product.expiryDate!, // Sabemos que no es undefined
+          'Días Restantes': diffDays,
+          Estado: estado,
+          Stock: product.stock,
+          'Valor en Stock': `$${(product.stock * product.price).toFixed(2)}`,
+          'Alerta': diffDays <= 7 ? '⚠️ URGENTE' : diffDays <= 30 ? '⚠️ ATENCIÓN' : '✅ NORMAL'
+        };
+      })
+      .sort((a, b) => {
+        const estadoPrioridad: Record<string, number> = {
+          'VENCIDO': 1,
+          'CRÍTICO': 2,
+          'PRÓXIMO': 3,
+          'VIGENTE': 4
+        };
+        
+        const prioridadA = estadoPrioridad[a.Estado] || 5;
+        const prioridadB = estadoPrioridad[b.Estado] || 5;
+        
+        if (prioridadA === prioridadB) {
+          const dateA = new Date(a['Fecha Vencimiento']).getTime();
+          const dateB = new Date(b['Fecha Vencimiento']).getTime();
+          return dateA - dateB;
+        }
+        
+        return prioridadA - prioridadB;
+      });
+
+    if (data.length === 0) {
+      setNotifications(prev => [{
+        type: 'info',
+        message: 'No hay productos con fechas de vencimiento para exportar',
+        timestamp: new Date()
+      }, ...prev]);
+      return;
     }
 
-    const data: ProductExcelRow[] = products.map((product) => ({
-    Nombre: product.name,
-    SKU: product.sku,
-    "Código de Barras": product.barcode,
-    Categoría: product.category,
-    Precio: `$${product.price}`,
-    Costo: `$${product.cost}`,
-    "Ganancia Unitaria": `$${(product.price - product.cost).toFixed(2)}`,
-    "Margen de Ganancia":
-      product.cost > 0 ? `${(((product.price - product.cost) / product.cost) * 100).toFixed(1)}%` : "0.0%",
-    "Stock Actual": product.stock,
-    "Stock Mínimo": product.minStock,
-    Estado: product.stock <= product.minStock ? "CRÍTICO" : product.stock <= product.minStock * 2 ? "BAJO" : "NORMAL",
-    "Valor en Stock": `$${(product.stock * product.price).toFixed(2)}`,
-    "Inversión en Stock": `$${(product.stock * product.cost).toFixed(2)}`,
-    "Ganancia Potencial": `$${(product.stock * (product.price - product.cost)).toFixed(2)}`,
-    Descripción: product.description,
-    }))
+    exportToExcel(data, "productos-por-vencer", "Productos por Vencer");
 
-    const totalInversion = products.reduce((sum, p) => sum + p.stock * p.cost, 0)
-    const totalValor = products.reduce((sum, p) => sum + p.stock * p.price, 0)
-    const totalGanancia = products.reduce((sum, p) => sum + p.stock * (p.price - p.cost), 0)
+    setNotifications(prev => [{
+      type: 'success',
+      message: `Reporte de productos por vencer exportado: ${data.length} productos`,
+      timestamp: new Date()
+    }, ...prev]);
+  };
 
-    data.push({
-    Nombre: "TOTALES GENERALES",
-    SKU: "",
-    "Código de Barras": "",
-    Categoría: "",
-    Precio: "",
-    Costo: "",
-    "Ganancia Unitaria": "",
-    "Margen de Ganancia": "",
-    "Stock Actual": products.reduce((sum, p) => sum + p.stock, 0),
-    "Stock Mínimo": "", // Ahora puede ser string o number
-    Estado: "",
-    "Valor en Stock": `$${totalValor.toFixed(2)}`,
-    "Inversión en Stock": `$${totalInversion.toFixed(2)}`,
-    "Ganancia Potencial": `$${totalGanancia.toFixed(2)}`,
-    Descripción: "",
-    })
+  const exportObsoleteProducts = () => {
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    
+    const data = products
+      .filter(product => {
+        // Productos sin ventas recientes (simplificado)
+        const lastSold = product.lastSoldDate ? new Date(product.lastSoldDate) : null;
+        return !lastSold || lastSold < sixtyDaysAgo;
+      })
+      .map(product => ({
+        Producto: product.name,
+        SKU: product.sku,
+        Categoría: product.category,
+        Stock: product.stock,
+        'Última Venta': product.lastSoldDate || "Sin ventas registradas",
+        'Valor en Stock': `$${(product.stock * product.price).toFixed(2)}`
+      }));
 
-    exportToExcel(data, "reporte-productos", "Inventario de Productos")
-  }
+    exportToExcel(data, "productos-obsoletos", "Productos Obsoletos");
+  };
 
-// EXPORTACION DE VENTAS A EXCEL
-  const exportSalesToExcel = () => {
-    // 1. Datos principales
-    const mainData = sales.flatMap((sale) =>
-      sale.items.map((item) => {
-        const product = products.find((p) => p.id === item.productId)
-        const ganancia = product ? (item.price - product.cost) * item.quantity : 0
-
+  const exportProfitableProducts = () => {
+    const data = products
+      .map(product => {
+        const gananciaUnitaria = product.price - product.cost;
+        const margen = product.cost > 0 ? (gananciaUnitaria / product.cost) * 100 : 0;
+        const gananciaTotal = gananciaUnitaria * product.stock;
+        
         return {
-          "Número de Venta": sale.saleNumber,
-          Fecha: sale.date,
-          Producto: item.productName,
-          Cantidad: item.quantity,
-          "Precio Unitario": `$${item.price}`,
-          "Costo Unitario": `$${product?.cost || 0}`,
-          Subtotal: `$${item.subtotal.toFixed(2)}`,
-          Ganancia: `$${ganancia.toFixed(2)}`,
-          "Total de la Venta": `$${sale.total.toFixed(2)}`,
+          Producto: product.name,
+          SKU: product.sku,
+          Categoría: product.category,
+          Precio: `$${product.price}`,
+          Costo: `$${product.cost}`,
+          'Ganancia Unitaria': `$${gananciaUnitaria.toFixed(2)}`,
+          'Margen %': `${margen.toFixed(1)}%`,
+          Stock: product.stock,
+          'Ganancia Total Potencial': `$${gananciaTotal.toFixed(2)}`
+        };
+      })
+      .sort((a, b) => {
+        const gananciaA = parseFloat(a['Ganancia Total Potencial'].replace('$', ''));
+        const gananciaB = parseFloat(b['Ganancia Total Potencial'].replace('$', ''));
+        return gananciaB - gananciaA;
+      });
+
+    exportToExcel(data, "productos-rentables", "Productos Rentables");
+  };
+
+  const exportPaymentMethodsReport = () => {
+    const paymentData = sales.reduce((acc, sale) => {
+      if (sale.status === "completed") {
+        const method = sale.paymentMethod || "cash";
+        if (!acc[method]) {
+          acc[method] = { ventas: 0, total: 0 };
         }
-      }),
-    )
+        acc[method].ventas++;
+        acc[method].total += sale.total;
+      }
+      return acc;
+    }, {} as Record<string, { ventas: number; total: number }>);
 
-    const totalVentas = sales.reduce((sum, sale) => sum + sale.total, 0)
-    const totalGanancia = mainData.reduce((sum, item) => {
-      const gananciaStr = item.Ganancia.replace("$", "")
-      return sum + Number.parseFloat(gananciaStr)
-    }, 0)
+    const data = Object.entries(paymentData).map(([metodo, info]) => ({
+      'Método de Pago': metodo === "cash" ? "Efectivo" : 
+                      metodo === "transfer" ? "Transferencia" : "Tarjeta",
+      'Cantidad de Ventas': info.ventas,
+      'Total Recaudado': `$${info.total.toFixed(2)}`,
+      'Porcentaje del Total': `${((info.total / totalRevenue) * 100).toFixed(1)}%`
+    }));
 
-    // 2. Fila de totales (con tipos compatibles)
-    const totalData = [{
-      "Número de Venta": "TOTALES GENERALES",
-      Fecha: "",
-      Producto: "",
-      Cantidad: "-",
-      "Precio Unitario": "",
-      "Costo Unitario": "",
-      Subtotal: "",
-      Ganancia: `$${totalGanancia.toFixed(2)}`,
-      "Total de la Venta": `$${totalVentas.toFixed(2)}`,
-    }]
+    exportToExcel(data, "ventas-por-metodo-pago", "Ventas por Método de Pago");
+  };
 
-    // 3. Combinar ambos arrays
-    const allData = [...mainData, ...totalData]
+  // ===========================================================================
+  // SUBSECCIÓN 6.6: FUNCIONES DE BACKUP Y RECUPERACIÓN
+  // ===========================================================================
+  
+  const resetSalesHistory = () => {
+    setSalesBackup([...sales]);
+    setSales([]);
+    setShowRecoverySales(true);
+    setTimeout(() => setShowRecoverySales(false), 10000);
+  };
 
-    exportToExcel(allData, "reporte-ventas", "Historial de Ventas")
-  }
+  const resetInventoryMovements = () => {
+    setInventoryMovementsBackup([...inventoryMovements]);
+    setInventoryMovements([]);
+    setShowRecoveryInventory(true);
+    setTimeout(() => setShowRecoveryInventory(false), 10000);
+  };
 
-// FILTRADO DE PRODCUTOS
-  const filterProducts = (term: string) => {
-    if (!term) return products
+  const recoverSalesHistory = () => {
+    setSales([...salesBackup]);
+    setSalesBackup([]);
+    setShowRecoverySales(false);
+  };
 
-    const searchLower = term.toLowerCase()
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(searchLower) ||
-        p.sku.toLowerCase().includes(searchLower) ||
-        p.barcode.includes(term) ||
-        p.category.toLowerCase().includes(searchLower),
-    )
-  }
+  const recoverInventoryMovements = () => {
+    setInventoryMovements([...inventoryMovementsBackup]);
+    setInventoryMovementsBackup([]);
+    setShowRecoveryInventory(false);
+  };
 
-  const searchProducts = (term: string) => {
-    if (!term) return products.filter((p) => p.stock > 0)
-
-    const searchLower = term.toLowerCase()
-    return products.filter(
-      (p) =>
-        p.stock > 0 &&
-        (p.name.toLowerCase().includes(searchLower) ||
-          p.sku.toLowerCase().includes(searchLower) ||
-          p.barcode.includes(term) ||
-          p.category.toLowerCase().includes(searchLower)),
-    )
-  }
-
-  // Cálculos del dashboard
+  // ===========================================================================
+  // SUBSECCIÓN 6.7: CÁLCULOS Y DATOS PARA UI
+  // ===========================================================================
+  
   const completedSales = sales.filter(sale => sale.status === "completed");
-  const totalRevenue = completedSales.reduce((sum, sale) => {const saleTotal = Number(sale.total) || 0;
-  return sum + saleTotal;
-}, 0);
+  const totalRevenue = completedSales.reduce((sum, sale) => {
+    const saleTotal = Number(sale.total) || 0;
+    return sum + saleTotal;
+  }, 0);
+  
   const totalSalesCount = completedSales.length;
-  const totalProducts = products.length
-  const lowStockProducts = products.filter((p) => p.stock <= p.minStock).length
-  const criticalStockProducts = products.filter((p) => p.stock <= p.minStock)
-  const totalSales = sales.length
-  const totalSuppliers = suppliers.length
+  const totalProducts = products.length;
+  const lowStockProducts = products.filter((p) => p.stock <= p.minStock).length;
+  const criticalStockProducts = products.filter((p) => p.stock <= p.minStock);
+  const totalSuppliers = suppliers.length;
+  
   const totalProfit = inventoryMovements
     .filter((m) => m.type === "salida")
-    .reduce((sum, m) => sum + (m.unitPrice - m.unitCost) * m.quantity, 0)
+    .reduce((sum, m) => sum + (m.unitPrice - m.unitCost) * m.quantity, 0);
 
-//--------------------------------------------------------------- AÑADIR NUEVO PROVEEDOR -----------------------------------------------------------------------------------
-
-  const addSupplier = async () => {
-    if (newSupplier.empresa && newSupplier.contacto) {
-      try {
-        // 1. Preparar datos para enviar al backend
-        const supplierToSend = {
-          empresa: newSupplier.empresa,
-          contacto: newSupplier.contacto,
-          email: newSupplier.email,
-          telefono: newSupplier.telefono,
-          direccion: newSupplier.direccion,
-          productos_que_surte: newSupplier.productos_que_surte,
-          ciudad: newSupplier.ciudad || null,
-          rfc: newSupplier.rfc || null,
-          condiciones_pago: newSupplier.condiciones_pago || null,
-          tiempo_entrega: newSupplier.tiempo_entrega || null,
-        };
-
-        // 2. Enviar al backend
-        const createdSupplier = await api.createProveedor(supplierToSend);
-
-        // 3. Actualizar estado local con la respuesta del backend
-        setSuppliers([...suppliers, createdSupplier]);
-
-        // 4. Limpiar formulario
-        setNewSupplier({ 
-          empresa: "", 
-          contacto: "", 
-          email: "", 
-          telefono: "", 
-          direccion: "", 
-          productos_que_surte: "",
-          ciudad: "",
-          rfc: "",
-          condiciones_pago: "",
-          tiempo_entrega: "",
-        });
-
-        // 5. Cerrar el diálogo
-        const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement;
-        if (closeButton) closeButton.click();
-        
-      } catch (error) {
-        console.error('Error creando proveedor:', error);
-        alert('Error al crear el proveedor. Revisa la consola para más detalles.');
-      }
-    } else {
-      alert('Por favor completa al menos los campos de Empresa y Contacto');
-    }
-  }
-
-  // Datos para gráficos - ACTUALIZADOS para ser reactivos
-  const salesChartData =
-    sales.length > 0
-      ? sales.map((sale, index) => ({
-          name: sale.date,
-          value: sale.total,
-        }))
-      : [{ name: "Sin datos", value: 0 }]
+  const salesChartData = sales.length > 0
+    ? sales.map((sale, index) => ({
+        name: sale.date,
+        value: sale.total,
+      }))
+    : [{ name: "Sin datos", value: 0 }];
 
   const productsSoldData = (() => {
     const productSales = products.map((product) => {
       const totalSold = sales.reduce((sum, sale) => {
-        const item = sale.items.find((item) => item.productId === product.id)
-        return sum + (item ? item.quantity : 0)
-      }, 0)
-      return { name: product.name, value: totalSold }
-    })
+        const item = sale.items.find((item) => item.productId === product.id);
+        return sum + (item ? item.quantity : 0);
+      }, 0);
+      return { name: product.name, value: totalSold };
+    });
 
-    const filteredData = productSales.filter((item) => item.value > 0)
-    return filteredData.length > 0 ? filteredData.slice(0, 5) : [{ name: "Sin ventas", value: 0 }]
-  })()
-
-//---------------------------------------------------------------------------------- DASHBOARD DE INGRESOS POR CATEGORIA --------------------------------------------------------------------------------------------------------
+    const filteredData = productSales.filter((item) => item.value > 0);
+    return filteredData.length > 0 ? filteredData.slice(0, 5) : [{ name: "Sin ventas", value: 0 }];
+  })();
 
   const categoryRevenueData = (() => {
-    const categoryMap = new Map()
+    const categoryMap = new Map();
 
-    // Calcular ingresos por categoría
     sales.forEach((sale) => {
       if (sale.status === "completed") {
         sale.items.forEach((item) => {
-          const product = products.find((p) => p.id === item.productId)
+          const product = products.find((p) => p.id === item.productId);
           if (product) {
-            const currentValue = categoryMap.get(product.category) || 0
-            // Convertir subtotal a número (por si viene como string)
+            const currentValue = categoryMap.get(product.category) || 0;
             const subtotalNum = typeof item.subtotal === 'string' 
               ? parseFloat(item.subtotal) 
-              : Number(item.subtotal)
-            categoryMap.set(product.category, currentValue + subtotalNum)
+              : Number(item.subtotal);
+            categoryMap.set(product.category, currentValue + subtotalNum);
           }
-        })
+        });
       }
-    })
+    });
 
     const result = Array.from(categoryMap.entries()).map(([name, value]) => ({ 
       name, 
-      value: Number(value.toFixed(2)) // Asegurar 2 decimales
-    }))
+      value: Number(value.toFixed(2))
+    }));
 
-    console.log('📊 INGRESOS POR CATEGORÍA CALCULADOS:', result)
-    
-    // SIEMPRE devolver los datos reales, aunque sea solo una categoría
-    return result.length > 0 ? result : [{ name: "No hay ventas", value: 0 }]
-  })()
+    return result.length > 0 ? result : [{ name: "No hay ventas", value: 0 }];
+  })();
 
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  
-  const formatCurrency = (amount: number): string => {
-    if (isNaN(amount)) return '$0.00';
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  };
+  // ===========================================================================
+  // SUBSECCIÓN 6.8: RENDERIZADO POR PESTAÑA
+  // ===========================================================================
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
         return (
           <div className="space-y-6">
-            {/* Métricas principales */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               <MetricCard
                 title="Ingresos Totales"
@@ -2592,7 +3059,6 @@ export default function BusinessSalesSystem() {
               />
             </div>
 
-            {/* Gráficos */}
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -2632,7 +3098,6 @@ export default function BusinessSalesSystem() {
                 </CardContent>
               </Card>
 
-              {/* Productos con stock crítico */}
               {criticalStockProducts.length > 0 && (
                 <Card>
                   <CardHeader>
@@ -2663,20 +3128,15 @@ export default function BusinessSalesSystem() {
               )}
             </div>
           </div>
-        )
+        );
 
-{/*================================================================================ INVENTARIO DE PRODUCTOS ================================================================================*/}
-
-// Sección Productos
       case "products":
         return (
           <div className="space-y-6">
             <Card>
-              {/*--- TITULO DE PAGINA ---*/}
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Gestión de Productos</CardTitle>
-                  {/*--- BOTON DE AGREGAR PRODUCTO ---*/}
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button>
@@ -2789,6 +3249,19 @@ export default function BusinessSalesSystem() {
                             <p className="text-red-500 text-sm mt-1">Debes seleccionar una categoría</p>
                           )}
                         </div>
+                        <div>
+                          <Label htmlFor="product-description">Descripción *</Label>
+                          <Textarea
+                            id="product-description"
+                            value={newProduct.description}
+                            onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                            placeholder="Descripción del producto"
+                            required
+                          />
+                          {!newProduct.description && (
+                            <p className="text-red-500 text-sm mt-1">La descripción es obligatoria</p>
+                          )}
+                        </div>
                         <div className="flex justify-end gap-2 pt-4">
                           <DialogTrigger asChild>
                             <Button variant="outline">Cancelar</Button>
@@ -2811,7 +3284,6 @@ export default function BusinessSalesSystem() {
                     onChange={(e) => setProductSearchTerm(e.target.value)}
                     className="max-w-md"
                   />
-                  {/*--- BOTON DE EXPORTACION DE EXCEL ---*/}
                   <Button onClick={exportProductsToExcel} variant="outline" size="sm">
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Exportar Excel
@@ -2832,8 +3304,8 @@ export default function BusinessSalesSystem() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filterProducts(productSearchTerm)
-                        .filter(product => product && product.id) // ← Filtrar productos válidos
+                      {productsHook.filterProducts(productSearchTerm)
+                        .filter(product => product && product.id)
                         .map((product) => (
                         <TableRow key={product.id}>
                           <TableCell>
@@ -2980,9 +3452,7 @@ export default function BusinessSalesSystem() {
               </CardContent>
             </Card>
           </div>
-        )
-
-{/*================================================================================ VENTA DE PRODUCTOS ================================================================================*/}
+        );
 
       case "sales":
         return (
@@ -3001,7 +3471,7 @@ export default function BusinessSalesSystem() {
                   />
                 </div>
                 <div className="grid gap-2 max-h-96 overflow-y-auto">
-                  {searchProducts(searchTerm).map((product) => (
+                  {productsHook.searchProducts(searchTerm).map((product) => (
                     <div key={product.id} className="flex justify-between items-center p-3 border rounded-lg">
                       <div className="flex-1">
                         <div className="font-medium">{product.name}</div>
@@ -3018,7 +3488,7 @@ export default function BusinessSalesSystem() {
                 </div>
               </CardContent>
             </Card>
-            {/*--- CARRO DE COMPRAS ---*/}
+
             <Card>
               <CardHeader>
                 <CardTitle>Carrito de Compras</CardTitle>
@@ -3078,15 +3548,51 @@ export default function BusinessSalesSystem() {
                     </div>
                   ))}
                 </div>
-                {/*--- PESTAÑA DEL TOTAL ---*/}
+
                 {cart.length > 0 && (
                   <div className="border-t pt-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-semibold">Total:</span>
-                      <span className="text-xl font-bold">
-                        ${Number(cart.reduce((sum, item) => sum + Number(item.subtotal), 0)).toFixed(2)}
-                      </span>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>${currentSubtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Descuento:</span>
+                        <span className="text-red-600">-${currentDiscount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-semibold border-t pt-2">
+                        <span>Total:</span>
+                        <span>${currentTotal.toFixed(2)}</span>
+                      </div>
                     </div>
+
+                    <div className="space-y-2 mb-4">
+                      <Label>Método de Pago</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={paymentMethod === "cash" ? "default" : "outline"}
+                          onClick={() => setPaymentMethod("cash")}
+                          size="sm"
+                        >
+                          Efectivo
+                        </Button>
+                        <Button
+                          variant={paymentMethod === "transfer" ? "default" : "outline"}
+                          onClick={() => setPaymentMethod("transfer")}
+                          size="sm"
+                        >
+                          Transferencia
+                        </Button>
+                        <Button
+                          variant={paymentMethod === "card" ? "default" : "outline"}
+                          onClick={() => setPaymentMethod("card")}
+                          size="sm"
+                        >
+                          Tarjeta
+                        </Button>
+                      </div>
+                    </div>
+
                     <Button onClick={completeSale} disabled={cart.length === 0} className="w-full">
                       <ShoppingCart className="h-4 w-4 mr-2" />
                       Completar Venta
@@ -3096,19 +3602,15 @@ export default function BusinessSalesSystem() {
               </CardContent>
             </Card>
           </div>
-        )
-
-{/*================================================================================ PROVEEDORES ================================================================================*/}
+        );
 
       case "suppliers":
         return (
           <div className="space-y-6">
             <Card>
-              {/*--- TITULO DE PESTAÑA ---*/}
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Gestión de Proveedores</CardTitle>
-                  {/*--- BOTON DE AGREGAR PROVEEDOR ---*/}
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button>
@@ -3180,12 +3682,12 @@ export default function BusinessSalesSystem() {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="supplier-rfc">RFC</Label>
+                            <Label htmlFor="supplier-rut">RUT</Label>
                             <Input
-                              id="supplier-rfc"
-                              value={newSupplier.rfc || ""}
-                              onChange={(e) => setNewSupplier({ ...newSupplier, rfc: e.target.value })}
-                              placeholder="RFC"
+                              id="supplier-rut"
+                              value={newSupplier.rut || ""}
+                              onChange={(e) => setNewSupplier({ ...newSupplier, rut: e.target.value })}
+                              placeholder="RUT"
                             />
                           </div>
                           <div>
@@ -3200,12 +3702,22 @@ export default function BusinessSalesSystem() {
                         </div>
                         <div>
                           <Label htmlFor="supplier-condiciones-pago">Condiciones de Pago</Label>
-                          <Input
-                            id="supplier-condiciones-pago"
+                          <Select
                             value={newSupplier.condiciones_pago || ""}
-                            onChange={(e) => setNewSupplier({ ...newSupplier, condiciones_pago: e.target.value })}
-                            placeholder="30 días crédito, Contado, etc."
-                          />
+                            onValueChange={(value) => setNewSupplier({ ...newSupplier, condiciones_pago: value })}
+                          >
+                            <SelectTrigger id="supplier-condiciones-pago">
+                              <SelectValue placeholder="Seleccione condición de pago" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Tarjeta de Crédito">Tarjeta de Crédito</SelectItem>
+                              <SelectItem value="Tarjeta de Débito">Tarjeta de Débito</SelectItem>
+                              <SelectItem value="Transferencia">Transferencia</SelectItem>
+                              <SelectItem value="Efectivo">Efectivo</SelectItem>
+                              <SelectItem value="Cheque">Cheque</SelectItem>
+                              <SelectItem value="Otro medio">Otro medio</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <Label htmlFor="supplier-productos">Productos que Suministra</Label>
@@ -3273,7 +3785,6 @@ export default function BusinessSalesSystem() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            {/* BOTÓN EDITAR - NUEVO */}
                             <Dialog
                               open={isEditSupplierDialogOpen && editingSupplier?.id_proveedor === supplier.id_proveedor}
                               onOpenChange={(open) => {
@@ -3309,8 +3820,6 @@ export default function BusinessSalesSystem() {
                                 )}
                               </DialogContent>
                             </Dialog>
-
-                            {/* BOTÓN ELIMINAR (tu código existente, pero corregido el texto) */}
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button size="sm" variant="destructive">
@@ -3341,27 +3850,22 @@ export default function BusinessSalesSystem() {
               </CardContent>
             </Card>
           </div>
-        )
-
-{/*================================================================================ MOVIMIENTO DE INVENTARIO ================================================================================*/}
+        );
 
       case "inventory":
         return (
           <Card>
-            {/*--- TITULO DE PESTAÑA ---*/}
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle className="flex items-center gap-2">
                   <History className="h-5 w-5" />
                   Movimientos de Inventario
                 </CardTitle>
-                {/*--- BOTON DE EXPORTACION A EXCEL ---*/}
                 <div className="flex gap-2">
                   <Button onClick={exportInventoryToExcel} variant="outline" size="sm">
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Excel
                   </Button>
-                  {/*--- BOTON DE LIMPIAR HISTORIAL ---*/}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" size="sm">
@@ -3380,10 +3884,8 @@ export default function BusinessSalesSystem() {
                           para recuperar los datos si cambias de opinión.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      {/*--- BOTON DE CANCELAR ---*/}
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        {/*--- BOTON DE CONFIRMACION ---*/}
                         <AlertDialogAction onClick={resetInventoryMovements} className="bg-red-600 hover:bg-red-700">
                           Sí, Limpiar Todo
                         </AlertDialogAction>
@@ -3393,7 +3895,6 @@ export default function BusinessSalesSystem() {
                 </div>
               </div>
 
-              {/* Botón de recuperación */}
               {showRecoveryInventory && (
                 <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <div className="flex items-center justify-between">
@@ -3494,27 +3995,19 @@ export default function BusinessSalesSystem() {
               )}
             </CardContent>
           </Card>
-        )
+        );
 
-{/*================================================================================ HISTORIAL DE VENTAS ================================================================================*/}
       case "history":
-        // console.log('🔍 Ventas disponibles para mostrar en historial:', sales.length);
-        // if (sales.length > 0) {
-        //   console.log('📋 Primeras 5 ventas:', sales.slice(0, 5));
-        //   console.log('🔍 Buscando venta 42:', sales.find(v => v.id === 42));
-        // }
         return (
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Historial de Ventas ({sales.length} ventas)</CardTitle>
-                {/*--- EXPORTAR A EXCEL EL HISTORIAL DE VENTAS ---*/}
                 <div className="flex gap-2">
                   <Button onClick={exportSalesToExcel} variant="outline" size="sm">
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Excel
                   </Button>
-                  {/*--- BOTON DE LIMPIAR HISTORIAL ---*/}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" size="sm">
@@ -3533,10 +4026,8 @@ export default function BusinessSalesSystem() {
                           datos si cambias de opinión.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      {/*--- BOTON DE CANCELAR ---*/}
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        {/*--- BOTON DE CONFIRMAR ---*/}
                         <AlertDialogAction onClick={resetSalesHistory} className="bg-red-600 hover:bg-red-700">
                           Sí, Limpiar Todo
                         </AlertDialogAction>
@@ -3545,7 +4036,7 @@ export default function BusinessSalesSystem() {
                   </AlertDialog>
                 </div>
               </div>
-              {/*--- BOTON DE RECUPERACION ---*/}
+
               {showRecoverySales && (
                 <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <div className="flex items-center justify-between">
@@ -3586,16 +4077,13 @@ export default function BusinessSalesSystem() {
                       let fechaFormateada;
                       try {
                         const fechaDate = new Date(sale.date);
-                        
                         fechaFormateada = fechaDate.toLocaleDateString('es-ES', {
                           timeZone: 'UTC',
                           day: '2-digit',
                           month: '2-digit', 
                           year: 'numeric'
                         });
-                        
                       } catch (error) {
-                        console.error('❌ Error formateando fecha:', sale.date);
                         fechaFormateada = 'Fecha inválida';
                       }
 
@@ -3630,9 +4118,7 @@ export default function BusinessSalesSystem() {
               )}
             </CardContent>
           </Card>
-        )
-
-{/*================================================================================ SECCION CUSTOMERS ================================================================================*/}
+        );
 
       case "customers":
         return (
@@ -3819,9 +4305,7 @@ export default function BusinessSalesSystem() {
               </CardContent>
             </Card>
           </div>
-        )
-
-{/*================================================================================ SECCION PROMOCIONES ================================================================================*/}
+        );
 
       case "promotions":
         const uniqueCategories = Array.from(new Set(products.map(p => p.category)));
@@ -3861,17 +4345,13 @@ export default function BusinessSalesSystem() {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="product-description">Descripción *</Label>
+                            <Label htmlFor="promo-description">Descripción</Label>
                             <Textarea
-                              id="product-description"
-                              value={newProduct.description}
-                              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                              placeholder="Descripción del producto"
-                              required
+                              id="promo-description"
+                              value={newPromotion.description}
+                              onChange={(e) => setNewPromotion({ ...newPromotion, description: e.target.value })}
+                              placeholder="Descripción de la promoción"
                             />
-                            {!newProduct.description && (
-                              <p className="text-red-500 text-sm mt-1">La descripción es obligatoria</p>
-                            )}
                           </div>
                           <div>
                             <Label htmlFor="promo-type">Tipo de Descuento</Label>
@@ -4172,7 +4652,7 @@ export default function BusinessSalesSystem() {
                                 <Button size="sm" variant="destructive">
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
-                            </AlertDialogTrigger>
+                              </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>¿Eliminar promoción?</AlertDialogTitle>
@@ -4198,9 +4678,7 @@ export default function BusinessSalesSystem() {
               </CardContent>
             </Card>
           </div>
-        )
-
-{/*================================================================================ SECCION REPORTES ================================================================================*/}
+        );
 
       case "reports":
         return (
@@ -4474,18 +4952,20 @@ export default function BusinessSalesSystem() {
               </CardContent>
             </Card>
           </div>
-        )
-      default:
-        return <div>Sección no encontrada</div>
-    }
-  }
+        );
 
-{/*================================================================================ TITULO DE PAGINA ================================================================================*/}
+      default:
+        return <div>Sección no encontrada</div>;
+    }
+  };
+
+  // ===========================================================================
+  // SUBSECCIÓN 6.9: RENDER PRINCIPAL
+  // ===========================================================================
+  
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
       <SidebarNav activeTab={activeTab} onTabChange={setActiveTab} />
-      {/* Main Content */}
       <div className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-6">
@@ -4496,5 +4976,5 @@ export default function BusinessSalesSystem() {
         </div>
       </div>
     </div>
-  )
+  );
 }
